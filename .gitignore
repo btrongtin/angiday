@@ -1,0 +1,33 @@
+# Local scratch notes (not part of the repo)
+locals/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.next/
+out/
+cdk.out/
+.turbo/
+
+# Env & secrets (secrets live in SSM Parameter Store)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test & coverage
+coverage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
