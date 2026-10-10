@@ -24,8 +24,8 @@ flowchart LR
   end
 
   DB[(MongoDB Atlas)]
-  LLM[LLM provider]
-  MAPS[Maps API]
+  LLM[Gemini API<br/>via AI SDK]
+  MAPS[Google Places API<br/>New]
 
   TG -->|webhook| IL --> Q --> WL
   Q -.after N retries.-> DLQ --> CW
@@ -36,6 +36,7 @@ flowchart LR
   WEB --> DB
   WEB -->|chat| LLM
   IL & WL -.secrets.-> SSM
+  CW -.SNS email.-> OWNER((Owner))
 ```
 
 ## Modules
@@ -43,10 +44,11 @@ flowchart LR
 | Module | Responsibility | Depends on | Used by |
 |---|---|---|---|
 | `packages/shared` | zod schemas (Place, Tag, PlaceFilters), taxonomy enums, Vietnamese text normalization | — | everything |
+| `packages/ai` | `getModel('extract' \| 'chat')` (the only place naming a provider/model), prompts, extraction call, chat core: system prompt + `search_places` tool + tool loop ([ADR-0009](adr/0009-gemini-via-ai-sdk.md), [ADR-0011](adr/0011-telegram-chat-via-forum-topics.md)) | shared, Vercel AI SDK | web, worker |
 | `packages/db` | Mongo client (reused across invocations), repositories for groups/places/tags, `searchPlaces(groupId, filters)` | shared | web, worker |
 | `services/ingest` — webhook | Verify Telegram secret, drop unknown chats, enqueue, ack 200 fast | SQS | Telegram |
-| `services/ingest` — worker | Resolve Maps link, LLM extraction, tag mapping, persist, reply in Telegram | db, shared, LLM, Maps, Telegram API | SQS |
-| `apps/web` | UI (list, filters, tags, chat) + thin Route Handlers | db, shared, LLM | browser |
+| `services/ingest` — worker | Resolve Maps link, LLM extraction, tag mapping, persist, reply in Telegram; Telegram chat adapter (F7) | db, shared, ai, Maps, Telegram API | SQS |
+| `apps/web` | UI (list, filters, tags, chat) + thin Route Handlers | db, shared, ai | browser |
 | `infra` | CDK: Lambdas, SQS, DLQ, alarms, SSM params | — | — |
 
 Rule: handlers stay thin, logic lives in `packages/*` ([ADR-0005](adr/0005-api-in-nextjs-nestjs-later.md)).
@@ -57,17 +59,20 @@ The field-level source of truth is the zod schemas in `packages/shared`. This se
 
 | Collection | Purpose | Key indexes |
 |---|---|---|
-| `groups` | Tenant; links a Telegram chat to a group | unique `telegramChatId` |
+| `groups` | Tenant; links a Telegram chat to a group; stores registered topic ids (`saveThreadId`, `askThreadId`) | unique `telegramChatId` |
 | `members` | People in a group (Telegram user, display name); used for "added by" and per-person ratings | `{ groupId, telegramUserId }` unique |
-| `places` | One saved restaurant | `{ groupId, createdAt }`, `{ groupId, tagIds }` (multikey), `location` 2dsphere (later) |
+| `places` | One saved restaurant | `{ groupId, createdAt }`, `{ groupId, tagIds }` (multikey), `{ groupId, "area.legacyDistrict" }`, `location` 2dsphere (later) |
 | `tags` | Per-group tag registry `{ name, normalized }` | `{ groupId, normalized }` unique |
 | `telegram_updates` | Processed `update_id`s for idempotency | unique `updateId`, TTL |
+| `chat_turns` | Recent Telegram chat turns per topic, for multi-turn context (Phase 2) | `{ groupId, threadId, createdAt }`, TTL |
 
 A place has **two independent statuses**:
 - `ingestStatus`: `processing → needs_info → saved` (or `failed`). This is pipeline state.
 - `visitStatus`: `want_to_try | visited`. This is user state.
 
 Every place also stores a `searchText` field (normalized, accent-free) so free-text search is accent-insensitive.
+
+Area: `area: { city, ward, legacyDistrict }`. `ward`/`city` come from Google as-is; `legacyDistrict` (pre-2025 HCMC district) is derived at ingest by point-in-polygon on a static GeoJSON ([ADR-0013](adr/0013-area-legacy-district-from-polygons.md)).
 
 ## Flows
 
@@ -80,19 +85,21 @@ sequenceDiagram
   participant IL as Ingest Lambda
   participant Q as SQS
   participant W as Worker Lambda
-  participant M as Maps API
+  participant M as Google Places API
   participant L as LLM
   participant DB as MongoDB
 
   U->>TG: maps.app.goo.gl/... + "bún bò, giá rẻ"
   TG->>IL: POST webhook (secret header)
-  IL->>IL: verify secret, check chat allowlist
+  IL->>IL: verify secret, check chat allowlist, route (ADR-0008)
   IL->>Q: enqueue update
   IL-->>TG: 200 OK (fast)
   Q->>W: deliver message
   W->>DB: record update_id (skip if duplicate)
   W->>DB: insert place (ingestStatus=processing)
-  W->>M: resolve short link → name, address, coords, place_id
+  W->>W: follow short-link redirects, parse name + coords from URL
+  W->>M: Text Search (name, biased to coords) → place_id, address, types
+  W->>W: point-in-polygon → area.legacyDistrict
   W->>L: extract cuisine, dishType, price, tag names
   W->>W: zod validate (retry with error on bad output)
   W->>DB: map tag names → ids, save (ingestStatus=saved)
@@ -101,11 +108,29 @@ sequenceDiagram
 
 ### F2. Missing info → ask back
 
-1. Worker can't fill a required field (e.g. no Maps link) → `ingestStatus = needs_info`.
-2. Bot replies asking for the missing piece.
-3. User **replies to the bot's message** → worker finds the pending place via `reply_to_message` → merges → continues F1 from the Maps step.
+Applies to `/add <text>` without a Maps link ([ADR-0008](adr/0008-explicit-add-command-for-text-only.md)).
 
-_Open: text-only handling (see Open questions)._
+1. Worker creates the place with `ingestStatus = needs_info` and keeps the user's text as hints.
+2. Bot replies asking for a Maps link and stores its own `message_id` on the place.
+3. User **replies to the bot's message** → ingest routes it as a follow-up → worker finds the pending place via `reply_to_message.message_id` (scoped by `groupId`) → merges → continues F1 from the Maps step.
+4. Reply still has no link → bot asks again.
+
+`needs_info` places are hidden from the default web list.
+
+### Ingest routing
+
+The ingest Lambda decides cheaply what enters the queue; everything else is dropped with a 200. Topics are optional: without registered topics, the "Save topic" rules apply to the whole group ([ADR-0008](adr/0008-explicit-add-command-for-text-only.md), [ADR-0011](adr/0011-telegram-chat-via-forum-topics.md)).
+
+| Where | Message | Route |
+|---|---|---|
+| Save topic | Contains a Google Maps URL | F1 |
+| Save topic | `/add <text>` without a link | F2 (create `needs_info`) |
+| Save topic | `/add` alone | Usage help |
+| Save topic | Reply to a bot message | F2 follow-up |
+| Ask topic | Any text from a human | F7 (chat) |
+| Anywhere | `/ask <question>` | F7 (chat) |
+| Anywhere | `/setup save` / `/setup ask` | Register the current topic on the group |
+| — | Anything else | Drop |
 
 ### F3. Processing failure
 
@@ -117,14 +142,44 @@ _Open: text-only handling (see Open questions)._
 
 1. Admin logs in (hardcoded credentials → session cookie).
 2. Server Component calls `searchPlaces(groupId, filters)`.
-3. Filters: cuisine, dish type, district, price, tags, visit status, free text.
+3. Filters: cuisine, dish type, area (old district or new ward, via alias table — [ADR-0013](adr/0013-area-legacy-district-from-polygons.md)), price, tags, visit status, free text.
 4. Cards link to Google Maps.
 
 ### F5. AI chat (web) — Phase 2
 
 1. `POST /api/chat` with the conversation.
-2. LLM calls tool `search_places(filters)`, which runs the same `searchPlaces()` as F4 and is scoped to the group.
+2. The chat core in `packages/ai` runs with `streamText`; the LLM calls tool `search_places(filters)`, which runs the same `searchPlaces()` as F4 and is scoped to the group.
 3. Response streams back: text + place cards with Maps links.
+
+### F7. AI chat (Telegram) — Phase 2, built before F5
+
+```mermaid
+sequenceDiagram
+  actor U as User
+  participant TG as Telegram
+  participant IL as Ingest Lambda
+  participant Q as SQS
+  participant W as Worker Lambda
+  participant L as Gemini
+  participant DB as MongoDB
+
+  U->>TG: (Ask topic) "quán lẩu gần LIM Tower?"
+  TG->>IL: webhook
+  IL->>Q: enqueue (route = chat)
+  IL-->>TG: 200 OK
+  Q->>W: deliver
+  W->>TG: sendChatAction typing
+  W->>DB: load last N chat_turns (groupId, threadId)
+  W->>L: generateText (chat core, tool search_places)
+  L-->>W: tool call search_places(filters)
+  W->>DB: searchPlaces(groupId, filters)
+  W->>L: tool result
+  L-->>W: final answer
+  W->>DB: append chat_turns
+  W->>TG: reply in topic: text + inline URL buttons (Google Maps)
+```
+
+Same chat core as F5; only the adapter differs (no streaming, Telegram formatting). See [ADR-0011](adr/0011-telegram-chat-via-forum-topics.md).
 
 ### F6. Manage tags (web)
 
@@ -138,15 +193,20 @@ _Open: text-only handling (see Open questions)._
 |---|---|
 | Telegram resends the same update | Idempotency via unique `updateId` |
 | LLM returns invalid JSON / schema | Re-prompt with the zod error, max N attempts, then fail |
-| LLM 429 | Exponential backoff; SQS redelivery as the outer retry |
+| LLM 429 (free-tier RPM limit) | Worker: exponential backoff, SQS redelivery as the outer retry. Chat: short retry, then a friendly "busy, try again" message |
 | Unknown chat sends to bot | Dropped at ingest |
+| Maps URL can't be parsed / no Places match | Fall back to Text Search on the message text; still nothing → `needs_info`, ask for a better link ([ADR-0010](adr/0010-google-places-api.md)) |
 | Message fails repeatedly | DLQ + alarm; place marked `failed` |
+
+## Observability
+
+See [ADR-0015](adr/0015-testing-and-observability-baseline.md).
+
+- Lambdas log JSON via Powertools Logger; `updateId` is the correlation id across webhook → SQS → worker.
+- Metrics (EMF): `PlaceSaved`, `PlaceFailed`, `LlmRetry`, `LlmTokens`, `Llm429`.
+- Alarms → SNS → email: DLQ not empty; worker errors.
+- Web admin filter shows `failed` / `needs_info` places.
 
 ## Open questions
 
-- Text-only message (no Maps link): ask for a link via reply (leaning) vs auto-search with inline buttons.
-- LLM provider: Bedrock / Gemini / other.
-- Maps API: Google / Goong (Goong can't resolve Google short links directly).
-- Cuisine & dish-type taxonomy values.
-- Monorepo tooling.
-- Testing strategy; observability details.
+None for Phase 1. New questions go here until they get an ADR.

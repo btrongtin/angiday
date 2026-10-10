@@ -2,7 +2,7 @@
 
 Restaurant saving & search for a small group (2 people for now). Users share Google Maps links into a Telegram group; a bot extracts structured place data with an LLM and stores it. A web app lets them browse/filter places and ask an AI chatbot.
 
-**Current phase:** Phase 0 — planning & setup. See [docs/progress.md](docs/progress.md) → "Now / Next".
+**Current phase:** Phase 1 — ingest + list (next: slice S0). Plan: [docs/plans/phase-1-ingest-and-list.md](docs/plans/phase-1-ingest-and-list.md). See [docs/progress.md](docs/progress.md) → "Now / Next".
 
 ## Docs map
 
@@ -21,13 +21,14 @@ apps/web          Next.js: UI + Route Handlers (API lives here for now)
 services/ingest   AWS Lambdas: Telegram webhook (ingest) + worker
 infra/            AWS CDK
 packages/shared   zod schemas, taxonomy enums, Vietnamese text normalization
+packages/ai       AI SDK model config (getModel), prompts, extraction
 packages/db       Mongo client + repositories (used by web and worker)
 apps/api          (later) NestJS — API migrates here
 ```
 
 ## Commands
 
-_TBD once the monorepo is scaffolded._
+_TBD once the monorepo is scaffolded._ Tooling: pnpm workspaces + Turborepo, Just-in-Time internal packages ([ADR-0014](docs/adr/0014-pnpm-turborepo-jit-packages.md)).
 
 ## Conventions
 
@@ -54,6 +55,7 @@ _TBD once the monorepo is scaffolded._
 | kiểu món (chiên, nước, nướng…) | `dishType` |
 | món nổi bật | `highlights` |
 | tầm giá | `priceRange` |
-| quận / khu vực | `district` |
+| quận (cũ, trước 2025) | `area.legacyDistrict` (see ADR-0013) |
+| phường (mới) / thành phố | `area.ward` / `area.city` |
 | muốn thử / đã ăn | `visitStatus`: `want_to_try` / `visited` |
 | nhóm | `group` (tenant) |
