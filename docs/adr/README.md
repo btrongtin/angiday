@@ -15,12 +15,13 @@ One file per decision. An accepted ADR's decision is never edited. To change cou
 | [0007](0007-monorepo.md) | Monorepo | Accepted |
 | [0008](0008-explicit-add-command-for-text-only.md) | Explicit `/add` command for text-only messages | Accepted |
 | [0009](0009-gemini-via-ai-sdk.md) | Gemini (free tier) via the Vercel AI SDK | Accepted |
-| [0010](0010-google-places-api.md) | Google Places API (New) for place details | Accepted |
+| [0010](0010-google-places-api.md) | Google Places API (New) for place details | Superseded by 0016 |
 | [0011](0011-telegram-chat-via-forum-topics.md) | AI chat in Telegram via forum topics | Accepted |
 | [0012](0012-cuisine-dishtype-price-taxonomy.md) | Cuisine, dish type and price range taxonomy | Accepted |
 | [0013](0013-area-legacy-district-from-polygons.md) | Area model — legacy district derived from polygons | Accepted |
 | [0014](0014-pnpm-turborepo-jit-packages.md) | pnpm workspaces + Turborepo, Just-in-Time internal packages | Accepted |
 | [0015](0015-testing-and-observability-baseline.md) | Testing and observability baseline | Accepted |
+| [0016](0016-place-details-from-url-and-nominatim.md) | Place details from the Maps URL + OpenStreetMap reverse geocoding | Accepted |
 
 ## Template
 

@@ -25,7 +25,7 @@ flowchart LR
 
   DB[(MongoDB Atlas)]
   LLM[Gemini API<br/>via AI SDK]
-  MAPS[Google Places API<br/>New]
+  MAPS[OSM Nominatim<br/>reverse geocoding]
 
   TG -->|webhook| IL --> Q --> WL
   Q -.after N retries.-> DLQ --> CW
@@ -47,7 +47,7 @@ flowchart LR
 | `packages/ai` | `getModel('extract' \| 'chat')` (the only place naming a provider/model), prompts, extraction call, chat core: system prompt + `search_places` tool + tool loop ([ADR-0009](adr/0009-gemini-via-ai-sdk.md), [ADR-0011](adr/0011-telegram-chat-via-forum-topics.md)) | shared, Vercel AI SDK | web, worker |
 | `packages/db` | Mongo client (reused across invocations), repositories for groups/places/tags, `searchPlaces(groupId, filters)` | shared | web, worker |
 | `services/ingest` — webhook | Verify Telegram secret, drop unknown chats, enqueue, ack 200 fast | SQS | Telegram |
-| `services/ingest` — worker | Resolve Maps link, LLM extraction, tag mapping, persist, reply in Telegram; Telegram chat adapter (F7) | db, shared, ai, Maps, Telegram API | SQS |
+| `services/ingest` — worker | Resolve Maps link, reverse geocode, LLM extraction, tag mapping, persist, reply in Telegram; Telegram chat adapter (F7) | db, shared, ai, Nominatim, Telegram API | SQS |
 | `apps/web` | UI (list, filters, tags, chat) + thin Route Handlers | db, shared, ai | browser |
 | `infra` | CDK: Lambdas, SQS, DLQ, alarms, SSM params | — | — |
 
@@ -72,7 +72,7 @@ A place has **two independent statuses**:
 
 Every place also stores a `searchText` field (normalized, accent-free) so free-text search is accent-insensitive.
 
-Area: `area: { city, ward, legacyDistrict }`. `ward`/`city` come from Google as-is; `legacyDistrict` (pre-2025 HCMC district) is derived at ingest by point-in-polygon on a static GeoJSON ([ADR-0013](adr/0013-area-legacy-district-from-polygons.md)).
+Area: `area: { city, ward, legacyDistrict }`. `ward`/`city` come from OpenStreetMap reverse geocoding as-is ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)); `legacyDistrict` (pre-2025 HCMC district) is derived at ingest by point-in-polygon on a static GeoJSON ([ADR-0013](adr/0013-area-legacy-district-from-polygons.md)).
 
 ## Flows
 
@@ -85,7 +85,7 @@ sequenceDiagram
   participant IL as Ingest Lambda
   participant Q as SQS
   participant W as Worker Lambda
-  participant M as Google Places API
+  participant M as Nominatim (OSM)
   participant L as LLM
   participant DB as MongoDB
 
@@ -97,8 +97,8 @@ sequenceDiagram
   Q->>W: deliver message
   W->>DB: record update_id (skip if duplicate)
   W->>DB: insert place (ingestStatus=processing)
-  W->>W: follow short-link redirects, parse name + coords from URL
-  W->>M: Text Search (name, biased to coords) → place_id, address, types
+  W->>W: follow short-link redirects, parse name + coords + feature id from URL
+  W->>M: reverse geocode (coords) → address, ward, city
   W->>W: point-in-polygon → area.legacyDistrict
   W->>L: extract cuisine, dishType, price, tag names
   W->>W: zod validate (retry with error on bad output)
@@ -195,7 +195,8 @@ Same chat core as F5; only the adapter differs (no streaming, Telegram formattin
 | LLM returns invalid JSON / schema | Re-prompt with the zod error, max N attempts, then fail |
 | LLM 429 (free-tier RPM limit) | Worker: exponential backoff, SQS redelivery as the outer retry. Chat: short retry, then a friendly "busy, try again" message |
 | Unknown chat sends to bot | Dropped at ingest |
-| Maps URL can't be parsed / no Places match | Fall back to Text Search on the message text; still nothing → `needs_info`, ask for a better link ([ADR-0010](adr/0010-google-places-api.md)) |
+| Maps URL can't be parsed / has no coordinates | `needs_info`, ask for a better link ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)) |
+| Reverse geocoding fails or returns nothing | Save without address/ward/city, log a warning; `legacyDistrict` still comes from polygons |
 | Message fails repeatedly | DLQ + alarm; place marked `failed` |
 
 ## Observability

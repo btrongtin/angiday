@@ -26,7 +26,7 @@ flowchart LR
   Q --> WL[Worker Lambda]
   Q -.failed.-> DLQ[(DLQ)]
   WL --> LLM[LLM]
-  WL --> MAPS[Maps API]
+  WL --> GEO[Geocoding<br/>OpenStreetMap]
   WL --> DB[(MongoDB Atlas)]
   WL -->|reply| TG
   WEB[Next.js web + API] --> DB
@@ -41,7 +41,8 @@ Details: [docs/architecture.md](docs/architecture.md). Decisions and trade-offs:
 - **Ingest:** AWS Lambda, SQS (+ DLQ), AWS CDK, SSM Parameter Store
 - **Data:** MongoDB Atlas
 - **Shared:** zod schemas in a monorepo
-- **LLM / Maps provider:** _TBD_
+- **LLM:** Gemini via the Vercel AI SDK
+- **Place data:** parsed from the shared Google Maps link; addresses from OpenStreetMap Nominatim
 
 ## Getting started
 

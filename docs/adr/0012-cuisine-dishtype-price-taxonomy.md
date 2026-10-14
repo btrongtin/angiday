@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-10
+- **Note:** Google `priceLevel` is no longer available; `priceRange` comes from the user's note or the LLM only ([ADR-0016](0016-place-details-from-url-and-nominatim.md)).
 
 ## Context
 Filters on cuisine, dish type and price must be exact, and the LLM must not invent values. ADR-0006 already separates these fixed classifications from free-form tags. This ADR fixes the values.
