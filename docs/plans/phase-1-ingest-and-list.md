@@ -4,11 +4,11 @@
 
 **Not in this phase:** AI chat (Telegram or web), forum topics / `/setup`, "near <landmark>", editable taxonomy, visit ratings via Telegram buttons, duplicate merging. See [progress.md](../progress.md) → Phase 2 and Backlog.
 
-Decisions this plan builds on: ADR-0001 … ADR-0015 ([index](../adr/README.md)).
+Decisions this plan builds on: ADR-0001 … ADR-0016 ([index](../adr/README.md)). ADR-0010 is superseded by ADR-0016.
 
 ## Definition of done
 
-- [ ] A Maps link posted in the group is saved with name, address, coordinates, `place_id`, `area`, cuisine, dish type, price range, highlights and tags; the bot replies with a summary.
+- [ ] A Maps link posted in the group is saved with name, coordinates, Maps feature id (when the URL has one), address (when reverse geocoding finds one), `area`, cuisine, dish type, price range, highlights and tags; the bot replies with a summary.
 - [ ] `/add <text>` without a link triggers the ask-back flow; replying with a link completes it.
 - [ ] Failures end as `failed` with a short bot notice; poison messages land in the DLQ and an email alarm fires.
 - [ ] Web: login, place list, filters (cuisine, dish type, area incl. "q3"/new ward names, price, tags, visit status, free text), tag management, visit status toggle.
@@ -44,7 +44,7 @@ Estimates assume someone strong in frontend and new to AWS/backend; they include
 
 **Demo:** `pnpm turbo lint typecheck test` passes locally and in GitHub Actions.
 
-- Accounts: AWS IAM user (no root) + budget alert, MongoDB Atlas M0, Telegram bot (BotFather, privacy mode off) + supergroup, Vercel, Gemini API key, Google Cloud project + billing + Places API (New) key restricted to that API with a daily quota cap (~100/day) + budget alert.
+- Accounts: AWS IAM user (no root) + budget alert, MongoDB Atlas M0, Telegram bot (BotFather, privacy mode off) + supergroup, Vercel, Gemini API key. No Maps account: reverse geocoding uses public Nominatim (ADR-0016).
 - Monorepo: pnpm workspaces, Turborepo, base `tsconfig`, ESLint, Vitest; empty `apps/web`, `services/ingest`, `infra`, `packages/{shared,db,ai}` (JIT packages, ADR-0014).
 - GitHub Actions: install → `turbo lint typecheck test`.
 - `.gitignore` covers `.env*`, `cdk.out`.
@@ -64,12 +64,14 @@ The thinnest path through **every** hop. Most AWS learning happens here.
 
 ### S2 — Place details & area · ~8h
 
-**Demo:** the saved place shows full address, `area` (e.g. "Q3 · Phường Xuân Hòa") and Google types on the web card.
+**Demo:** the saved place shows the address and `area` (e.g. "Q3 · Phường Xuân Hòa") on the web card, with OSM attribution.
 
-- Places API (New) Text Search, location-biased to parsed coordinates, minimal field mask; fallback to the message text; no match → `needs_info` (bot asks for a better link). MSW tests.
+- URL parser: add feature id (`0x…:0x…`) and prefer pin coordinates (`!3d…!4d…`); no coordinates → `needs_info` (bot asks for a better link).
+- `reverseGeocode(lat, lng)` via Nominatim `/reverse` (identifying User-Agent, base URL from config, `accept-language=vi`); map address keys → `address`, `area.ward`, `area.city` using real response fixtures. Failure → save without address and log a warning. MSW tests.
 - Area data: download GADM level-2 Vietnam, extract pre-2025 HCMC districts, simplify with `mapshaper`, commit JSON + source/licence note in `packages/shared`.
-- Point-in-polygon → `area.legacyDistrict`; `area.ward` / `area.city` from `addressComponents`.
+- Point-in-polygon → `area.legacyDistrict`; `area.ward` / `area.city` from the Nominatim address.
 - Vietnamese text normalization → `searchText`.
+- Web: "© OpenStreetMap contributors" attribution where addresses are shown.
 
 ### S3 — LLM extraction & tags · ~10h
 
@@ -99,7 +101,7 @@ The thinnest path through **every** hop. Most AWS learning happens here.
 
 ### S6 — Failure path & observability · ~6h
 
-**Demo:** force an error (e.g. bad Places key) → place marked `failed`, bot posts a short notice, after 3 attempts the message is in the DLQ and an alarm email arrives; Logs Insights query by `updateId` shows the whole path.
+**Demo:** force an error (e.g. bad Gemini key) → place marked `failed`, bot posts a short notice, after 3 attempts the message is in the DLQ and an alarm email arrives; Logs Insights query by `updateId` shows the whole path.
 
 - Mark `failed` + bot notice on final failure.
 - Powertools Metrics (EMF): `PlaceSaved`, `PlaceFailed`, `LlmRetry`, `LlmTokens`, `Llm429`.
@@ -153,15 +155,16 @@ Why this order: S1 de-risks the unfamiliar part (AWS + Telegram + async pipeline
 | 4 | Stateful ask-back (S5) | `/add` without a link just replies "please send a Maps link" (no `needs_info` state) | ~4h |
 | 5 | Free-text and tag filters (S4) | Keep enum, area, price and visit-status filters | ~3h |
 
-**Never cut:** S1 end-to-end path, idempotency, `groupId` scoping, zod validation of LLM output, DLQ + alarm, Places lookup, area derivation.
+**Never cut:** S1 end-to-end path, idempotency, `groupId` scoping, zod validation of LLM output, DLQ + alarm, URL parsing, area derivation.
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| Google changes the Maps URL format | Fixture tests fail loudly; Text Search fallback on message text |
+| Google changes the Maps URL format, or serves the Lambda a consent page instead of a redirect | Fixture tests fail loudly; place goes to `needs_info`, visible in the admin filter |
 | Gemini free-tier 429s | SQS retry with backoff; `Llm429` metric shows how often |
-| Places API cost surprise | Key restricted to one API, daily quota cap, budget alert |
+| OSM address data in Vietnam is thin or uses old wards | Address is optional; `legacyDistrict` comes from polygons; swap `reverseGeocode` to Goong if needed (ADR-0016) |
+| Public Nominatim blocks or throttles us | One call per place, identifying User-Agent; base URL is config, so another instance can be used without a release |
 | AWS learning curve in S1 | S1 is deliberately thin; the estimate includes learning; ask for a concept walkthrough before each new AWS piece |
 | Atlas M0 connection limits from Lambda | Reuse the client across invocations; worker concurrency is tiny |
 | GADM boundaries differ slightly from what users expect | Accept; users can still search by ward/address text |

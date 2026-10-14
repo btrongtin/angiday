@@ -13,7 +13,7 @@ High-level task checklist. Implementation steps live in `docs/plans/`, not here.
 - [x] Docs skeleton (CLAUDE.md, README, progress, architecture, ADRs)
 - [x] Resolve open questions (see [architecture.md → Open questions](architecture.md#open-questions))
   - [x] LLM provider → Gemini Flash free tier via AI SDK ([ADR-0009](adr/0009-gemini-via-ai-sdk.md))
-  - [x] Maps API → Google Places API (New) with quota caps ([ADR-0010](adr/0010-google-places-api.md))
+  - [x] Maps API → Google Places API (New) with quota caps ([ADR-0010](adr/0010-google-places-api.md)), superseded by URL parsing + OSM Nominatim ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md))
   - [x] Text-only message handling → `/add` + ask for link ([ADR-0008](adr/0008-explicit-add-command-for-text-only.md))
   - [x] AI chat in Telegram → one group, two forum topics ([ADR-0011](adr/0011-telegram-chat-via-forum-topics.md))
   - [x] Cuisine & dish-type taxonomy, price range ([ADR-0012](adr/0012-cuisine-dishtype-price-taxonomy.md))
@@ -30,7 +30,7 @@ Goal: share a Maps link in Telegram → place appears in the web list. Plan: [pl
 
 - [ ] S0 — Scaffold & accounts (~6h)
 - [ ] S1 — Walking skeleton: link → name saved → bot reply → web list (~14h)
-- [ ] S2 — Place details & area: Places Text Search, GADM HCMC polygons, `legacyDistrict`, `searchText` (~8h)
+- [ ] S2 — Place details & area: URL feature id, Nominatim reverse geocoding, GADM HCMC polygons, `legacyDistrict`, `searchText` (~8h)
 - [ ] S3 — LLM extraction & tags: taxonomy enums, `generateObject` + retry, tag mapping, eval script (~10h)
 - [ ] S4 — Web filters incl. area aliases (~10h)
 - [ ] S5 — `/add` and ask-back (`needs_info` + reply-to-message) (~6h)
@@ -57,10 +57,10 @@ Goal: share a Maps link in Telegram → place appears in the web list. Plan: [pl
 
 - [ ] Web: add/edit cuisine & dish-type values (moves enums to a per-group registry; new ADR superseding ADR-0012)
 - [ ] Visit status & ratings via Telegram inline buttons
-- [ ] `/add` auto-search: Places Text Search + inline buttons to pick the place (ADR-0008)
+- [ ] `/add` auto-search + inline buttons to pick the place (ADR-0008); needs a search provider other than Nominatim (ADR-0016)
 - [ ] "Near me" / "near <landmark>" (geolocation or geocoding + `2dsphere`) — decide in Phase 2 plan whether to pull in
 - [ ] Telegram Mini App: open the web app inside Telegram, auth via signed `initData`
-- [ ] Merge duplicates by Google `place_id`
+- [ ] Merge duplicates by Maps feature id, else name + distance
 - [ ] "What should we eat today?" — suggest 2–3 want-to-try places with reasons
 - [ ] Review summary on place detail page
 - [ ] More inputs: screenshots (vision), Facebook/Threads links (best-effort OG tags)
@@ -75,3 +75,4 @@ Goal: share a Maps link in Telegram → place appears in the web list. Plan: [pl
 |---|---|---|
 | 2026-10-07 | Planning: goals revised, 7 ADRs, docs skeleton | Open questions in Phase 0 |
 | 2026-10-10 | Resolved all Phase 0 questions (ADR-0008…0015: `/add`, Gemini via AI SDK, Google Places, Telegram chat via topics, taxonomy, area from polygons, pnpm + Turborepo, testing/observability); wrote Phase 1 plan | Function URL vs API Gateway kept as a plan-level choice (promote to ADR if needed) |
+| 2026-10-14 | Google Maps billing unavailable in Vietnam (prohibited territory); demo key forbids production use. ADR-0016 supersedes ADR-0010: place details from the Maps URL + Nominatim reverse geocoding; updated architecture, Phase 1 plan | Verify feature id and Nominatim address keys against real fixtures in S2 |

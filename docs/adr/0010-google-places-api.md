@@ -1,6 +1,6 @@
 # ADR-0010: Google Places API (New) for place details
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0016](0016-place-details-from-url-and-nominatim.md)
 - **Date:** 2026-10-10
 
 ## Context
