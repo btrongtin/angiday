@@ -46,6 +46,18 @@ _TBD once the monorepo is scaffolded._ Tooling: pnpm workspaces + Turborepo, Jus
 3. Before starting a phase → write its plan in `docs/plans/`.
 4. Keep this file short; put detail in `docs/` and link to it.
 
+## Workflow per slice
+
+Phases are split into vertical slices (S0, S1, …) in the phase plan. When the owner says "check progress.md and continue":
+
+1. **Find the work:** read `docs/progress.md` → first unticked slice of the current phase → its section in the phase plan (`docs/plans/phase-N-*.md`).
+2. **Skip brainstorming** when accepted ADRs + the phase plan already cover the slice. Brainstorm only for a genuinely new decision, and record it as a new ADR.
+3. **No slice plan yet** → write one with `superpowers:writing-plans`, saved to `docs/plans/phase-N/sN-<name>.md` (not `docs/superpowers/`). Then stop for the owner's review; no code in the same turn.
+4. **Slice plan approved** → branch `sN-<name>`, execute with `superpowers:executing-plans` (owner wants to follow along and learn; use subagents only if asked), TDD. Resume from the first unticked step if the plan is partly done. Before each new backend/AWS concept, explain it briefly in Vietnamese.
+5. **Owner-only steps** (accounts, console clicks, secrets) → give a checklist and wait. Never ask for secret values in chat. Local setup notes: `locals/setup-guideline.md`.
+6. **Finish the slice:** `superpowers:verification-before-completion` (lint/typecheck/test green, the slice's demo works) → tick the slice in `progress.md` + session-log line → update `architecture.md`/ADRs if anything changed → `superpowers:finishing-a-development-branch` (ask before commit/push/PR).
+7. A slice may span several sessions; note where you stopped in the session log's "Left open" column.
+
 ## Glossary (Vietnamese → code)
 
 | Vietnamese | Code |
