@@ -28,7 +28,17 @@ apps/api          (later) NestJS — API migrates here
 
 ## Commands
 
-_TBD once the monorepo is scaffolded._ Tooling: pnpm workspaces + Turborepo, Just-in-Time internal packages ([ADR-0014](docs/adr/0014-pnpm-turborepo-jit-packages.md)).
+Tooling: pnpm workspaces + Turborepo, Just-in-Time internal packages ([ADR-0014](docs/adr/0014-pnpm-turborepo-jit-packages.md)). Node 24, pnpm via `packageManager`.
+
+```bash
+pnpm install                                  # install all workspaces
+pnpm check                                    # turbo lint + typecheck + test (what CI runs)
+pnpm --filter @angiday/<name> test            # one workspace (shared, db, ai, ingest, infra, web)
+pnpm --filter @angiday/web dev                # web on http://localhost:3000
+pnpm --filter @angiday/infra cdk synth        # CDK template → infra/cdk.out
+```
+
+Version pins: TypeScript `~6.0` (typescript-eslint peer), ESLint 9 (eslint-config-next plugins). Shared tool versions live in the `catalog` of `pnpm-workspace.yaml`.
 
 ## Conventions
 
