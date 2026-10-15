@@ -1,0 +1,22 @@
+packages:
+  - apps/*
+  - services/*
+  - packages/*
+  - infra
+
+catalog:
+  '@types/node': ^24.19.2
+  eslint: ^9.39.5
+  typescript: ~6.0.3
+  vitest: ^5.0.5
+
+# pnpm 11+ fails install on dependency build scripts that are not listed here.
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - '@vitest/mocker@5.0.5'
+  - '@vitest/spy@5.0.5'
+  - vitest@5.0.5

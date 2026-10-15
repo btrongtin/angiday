@@ -11,6 +11,8 @@ build/
 out/
 cdk.out/
 .turbo/
+next-env.d.ts
+*.tsbuildinfo
 
 # Env & secrets (secrets live in SSM Parameter Store)
 .env
