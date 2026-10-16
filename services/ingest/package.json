@@ -6,14 +6,23 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:group": "tsx --env-file=../../.env scripts/seed-group.ts",
+    "set-webhook": "tsx --env-file=../../.env scripts/set-webhook.ts"
   },
   "dependencies": {
-    "@angiday/shared": "workspace:*"
+    "@angiday/db": "workspace:*",
+    "@angiday/shared": "workspace:*",
+    "@aws-lambda-powertools/logger": "^2.36.0",
+    "@aws-lambda-powertools/parameters": "^2.36.0",
+    "@aws-sdk/client-sqs": "^3.1152.0",
+    "@aws-sdk/client-ssm": "^3.1152.0"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.164",
     "@types/node": "catalog:",
     "eslint": "catalog:",
+    "tsx": "^4.23.15",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

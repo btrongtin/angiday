@@ -20,8 +20,9 @@ One file per decision. An accepted ADR's decision is never edited. To change cou
 | [0012](0012-cuisine-dishtype-price-taxonomy.md) | Cuisine, dish type and price range taxonomy | Accepted |
 | [0013](0013-area-legacy-district-from-polygons.md) | Area model — legacy district derived from polygons | Accepted |
 | [0014](0014-pnpm-turborepo-jit-packages.md) | pnpm workspaces + Turborepo, Just-in-Time internal packages | Accepted |
-| [0015](0015-testing-and-observability-baseline.md) | Testing and observability baseline | Accepted |
+| [0015](0015-testing-and-observability-baseline.md) | Testing and observability baseline | Accepted (MSW line partially superseded by 0017) |
 | [0016](0016-place-details-from-url-and-nominatim.md) | Place details from the Maps URL + OpenStreetMap reverse geocoding | Accepted |
+| [0017](0017-inject-fetch-for-http-tests.md) | Inject `fetch` for HTTP tests instead of MSW | Accepted |
 
 ## Template
 

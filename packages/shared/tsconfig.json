@@ -1,4 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // URL is a standard web platform API (present in Node and browsers alike); packages/shared
+    // runs in both (see env.ts), so we add the DOM lib for its ambient types rather than "node".
+    "lib": ["ES2023", "DOM"]
+  },
   "include": ["src"]
 }
