@@ -28,7 +28,17 @@ apps/api          (later) NestJS — API migrates here
 
 ## Commands
 
-_TBD once the monorepo is scaffolded._ Tooling: pnpm workspaces + Turborepo, Just-in-Time internal packages ([ADR-0014](docs/adr/0014-pnpm-turborepo-jit-packages.md)).
+Tooling: pnpm workspaces + Turborepo, Just-in-Time internal packages ([ADR-0014](docs/adr/0014-pnpm-turborepo-jit-packages.md)). Node 24, pnpm via `packageManager`.
+
+```bash
+pnpm install                                  # install all workspaces
+pnpm check                                    # turbo lint + typecheck + test (what CI runs)
+pnpm --filter @angiday/<name> test            # one workspace that has tests (shared, ingest, infra)
+pnpm --filter @angiday/web dev                # web on http://localhost:3000
+pnpm --filter @angiday/infra cdk synth        # CDK template → infra/cdk.out
+```
+
+Version pins: TypeScript `~6.0` (typescript-eslint peer), ESLint 9 (eslint-config-next plugins). Shared tool versions live in the `catalog` of `pnpm-workspace.yaml`.
 
 ## Conventions
 
@@ -45,6 +55,18 @@ _TBD once the monorepo is scaffolded._ Tooling: pnpm workspaces + Turborepo, Jus
 2. New architectural decision, or a change to an old one → new ADR (never edit an accepted ADR's decision; supersede it). Update `docs/architecture.md` if diagrams/flows change.
 3. Before starting a phase → write its plan in `docs/plans/`.
 4. Keep this file short; put detail in `docs/` and link to it.
+
+## Workflow per slice
+
+Phases are split into vertical slices (S0, S1, …) in the phase plan. When the owner says "check progress.md and continue":
+
+1. **Find the work:** read `docs/progress.md` → first unticked slice of the current phase → its section in the phase plan (`docs/plans/phase-N-*.md`).
+2. **Skip brainstorming** when accepted ADRs + the phase plan already cover the slice. Brainstorm only for a genuinely new decision, and record it as a new ADR.
+3. **No slice plan yet** → write one with `superpowers:writing-plans`, saved to `docs/plans/phase-N/sN-<name>.md` (not `docs/superpowers/`). Then stop for the owner's review; no code in the same turn.
+4. **Slice plan approved** → branch `sN-<name>`, ask user to ether execute with `superpowers:executing-plans` or `/superpowers:subagent-driven-development`. Resume from the first unticked step if the plan is partly done. Before each new backend/AWS concept, explain it briefly in Vietnamese.
+5. **Owner-only steps** (accounts, console clicks, secrets) → give a checklist and wait. Never ask for secret values in chat. Local setup notes: `locals/setup-guideline.md`.
+6. **Finish the slice:** `superpowers:verification-before-completion` (lint/typecheck/test green, the slice's demo works) → tick the slice in `progress.md` + session-log line → update `architecture.md`/ADRs if anything changed → `superpowers:finishing-a-development-branch` (ask before commit/push/PR).
+7. A slice may span several sessions; note where you stopped in the session log's "Left open" column.
 
 ## Glossary (Vietnamese → code)
 

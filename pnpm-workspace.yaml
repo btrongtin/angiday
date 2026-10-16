@@ -1,0 +1,37 @@
+packages:
+  - apps/*
+  - services/*
+  - packages/*
+  - infra
+
+catalog:
+  '@types/node': ^24.19.2
+  eslint: ^9.39.5
+  typescript: ~6.0.3
+  vitest: ^5.0.5
+  zod: ^4.6.7
+
+# pnpm 11+ fails install on dependency build scripts that are not listed here.
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - '@vitest/mocker@5.0.5'
+  - '@vitest/spy@5.0.5'
+  - vitest@5.0.5
+  - '@next/env@16.4.1'
+  - '@next/eslint-plugin-next@16.4.1'
+  - '@next/swc-darwin-arm64@16.4.1'
+  - '@next/swc-darwin-x64@16.4.1'
+  - '@next/swc-linux-arm64-gnu@16.4.1'
+  - '@next/swc-linux-arm64-musl@16.4.1'
+  - '@next/swc-linux-x64-gnu@16.4.1'
+  - '@next/swc-linux-x64-musl@16.4.1'
+  - '@next/swc-win32-arm64-msvc@16.4.1'
+  - '@next/swc-win32-x64-msvc@16.4.1'
+  - eslint-config-next@16.4.1
+  - next@16.4.1
+  - react-dom@19.3.1
+  - react@19.3.1

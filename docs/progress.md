@@ -4,8 +4,8 @@ High-level task checklist. Implementation steps live in `docs/plans/`, not here.
 
 ## Now / Next
 
-- **Now:** Phase 0 done. Phase 1 plan written.
-- **Next:** Phase 1 S0 — scaffold the monorepo and create accounts (see the [plan](plans/phase-1-ingest-and-list.md)).
+- **Now:** Phase 1 S0 — monorepo scaffolded on branch `s0-scaffold` ([slice plan](plans/phase-1/s0-scaffold.md)); waiting on account setup and the first green CI run on GitHub.
+- **Next:** Phase 1 S1 — walking skeleton (write its slice plan first).
 
 ## Phase 0 — Planning & setup
 
@@ -76,3 +76,4 @@ Goal: share a Maps link in Telegram → place appears in the web list. Plan: [pl
 | 2026-10-07 | Planning: goals revised, 7 ADRs, docs skeleton | Open questions in Phase 0 |
 | 2026-10-10 | Resolved all Phase 0 questions (ADR-0008…0015: `/add`, Gemini via AI SDK, Google Places, Telegram chat via topics, taxonomy, area from polygons, pnpm + Turborepo, testing/observability); wrote Phase 1 plan | Function URL vs API Gateway kept as a plan-level choice (promote to ADR if needed) |
 | 2026-10-14 | Google Maps billing unavailable in Vietnam (prohibited territory); demo key forbids production use. ADR-0016 supersedes ADR-0010: place details from the Maps URL + Nominatim reverse geocoding; updated architecture, Phase 1 plan | Verify feature id and Nominatim address keys against real fixtures in S2 |
+| 2026-10-15 | S0 code: pnpm + Turborepo monorepo (shared, db, ai, ingest, infra, web), base tsconfig/ESLint/Vitest, CDK app with empty IngestStack, minimal Next.js app, GitHub Actions CI; `pnpm check` green locally (cold, 3×) | Owner account checklist (S0 Task 0), push + PR to see CI green, then tick S0 |
