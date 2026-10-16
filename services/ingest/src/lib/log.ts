@@ -1,8 +1,12 @@
-/** What our code needs from a logger. Powertools `Logger` satisfies it; tests pass `createTestLog()`. */
+/**
+ * What our code needs from a logger. Powertools `Logger` satisfies it; tests pass `createTestLog()`.
+ * The extra context is a rest parameter (not an optional one) so the type matches Powertools'
+ * `LogItemExtraInput` (a union that excludes `undefined`) — an optional param would not.
+ */
 export interface Log {
-  info(message: string, extra?: Record<string, unknown>): void;
-  warn(message: string, extra?: Record<string, unknown>): void;
-  error(message: string, extra?: Record<string, unknown>): void;
+  info(message: string, ...extra: Record<string, unknown>[]): void;
+  warn(message: string, ...extra: Record<string, unknown>[]): void;
+  error(message: string, ...extra: Record<string, unknown>[]): void;
 }
 
 /** A logger whose persistent keys (updateId, route) are added per SQS record and removed after it. */
