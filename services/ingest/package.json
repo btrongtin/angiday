@@ -9,11 +9,18 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@angiday/shared": "workspace:*"
+    "@angiday/db": "workspace:*",
+    "@angiday/shared": "workspace:*",
+    "@aws-lambda-powertools/logger": "^2.36.0",
+    "@aws-lambda-powertools/parameters": "^2.36.0",
+    "@aws-sdk/client-sqs": "^3.1152.0",
+    "@aws-sdk/client-ssm": "^3.1152.0"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.164",
     "@types/node": "catalog:",
     "eslint": "catalog:",
+    "tsx": "^4.23.15",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
