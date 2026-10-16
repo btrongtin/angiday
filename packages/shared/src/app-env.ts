@@ -21,8 +21,19 @@ const chatIdList = z
  * Values live in `.env` locally, SSM Parameter Store on AWS and Vercel env vars for the web app
  * (see CLAUDE.md → Secrets). Never put a value in this file.
  */
+/**
+ * Requires a non-empty database name right after the host(s): `.../angiday?...`. Without this,
+ * the driver's `getDb()` (no db argument) silently connects to its default `test` database —
+ * the exact mistake that broke the S1 Task 10 demo (code-review finding, ledgered in S1's plan).
+ * Matches both the SRV form and the owner's non-SRV, comma-separated multi-host form.
+ */
+const mongodbUri = z
+  .string()
+  .min(1)
+  .regex(/^mongodb(\+srv)?:\/\/[^/]+\/[^/?]+/, 'must include a database name, e.g. …mongodb.net/angiday?...');
+
 export const appEnvShape = {
-  MONGODB_URI: z.string().min(1),
+  MONGODB_URI: mongodbUri,
   TELEGRAM_BOT_TOKEN: z.string().min(1),
   TELEGRAM_WEBHOOK_SECRET: z.string().min(1),
   TELEGRAM_ALLOWED_CHAT_IDS: chatIdList,

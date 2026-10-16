@@ -44,6 +44,22 @@ describe('loadAppEnv', () => {
     expect(() => loadAppEnv({ ...valid, GROUP_ID: 'my-group' })).toThrowError(/GROUP_ID/);
   });
 
+  it('rejects a MONGODB_URI with no database name (would silently connect to the driver default "test" db)', () => {
+    expect(() => loadAppEnv({ ...valid, MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/' })).toThrowError(
+      /MONGODB_URI/,
+    );
+    expect(() => loadAppEnv({ ...valid, MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/?retryWrites=true' })).toThrowError(
+      /MONGODB_URI/,
+    );
+  });
+
+  it('accepts a non-SRV, multi-host MONGODB_URI with a database name', () => {
+    const multiHost =
+      'mongodb://user:pass@shard-00.mongodb.net:27017,shard-01.mongodb.net:27017/angiday?replicaSet=rs0';
+
+    expect(() => loadAppEnv({ ...valid, MONGODB_URI: multiHost })).not.toThrow();
+  });
+
   describe('with a list of keys', () => {
     it('validates and returns only those keys', () => {
       const env = loadAppEnv(
