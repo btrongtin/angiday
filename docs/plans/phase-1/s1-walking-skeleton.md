@@ -411,9 +411,9 @@ export const placeUrlFixtures: PlaceUrlFixture[] = [
   // Real links shared by the owner (Task 2 Step 1): resolved with `curl -s -o /dev/null -w '%{redirect_url}'`,
   // one hop each. Pin and viewport differ slightly in all three — proof the "prefer pin" rule matters.
   {
-    label: 'owner: TÔ GHẸ - HỦ TIỂU GHẸ Tân Định',
+    label: 'owner: TÔ GHẸ - HỦ TIẾU GHẸ Tân Định',
     url: 'https://www.google.com/maps/place/T%C3%94+GH%E1%BA%B8+-+H%E1%BB%A6+TI%E1%BA%BEU+GH%E1%BA%B8+T%C3%A2n+%C4%90%E1%BB%8Bnh/@10.7917545,106.6926015,17z/data=!3m1!4b1!4m6!3m5!1s0x317529006656f9ef:0xe1f83b4b1284b797!8m2!3d10.7917492!4d106.6951764!16s%2Fg%2F11ntmp232g!18m1!1e1?entry=tts',
-    expected: { name: 'TÔ GHẸ - HỦ TIỂU GHẸ Tân Định', lat: 10.7917492, lng: 106.6951764 },
+    expected: { name: 'TÔ GHẸ - HỦ TIẾU GHẸ Tân Định', lat: 10.7917492, lng: 106.6951764 },
   },
   {
     label: 'owner: Bún riêu Út Nhỏ - CN5',
