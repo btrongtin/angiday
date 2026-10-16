@@ -6,7 +6,9 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:group": "tsx --env-file=../../.env scripts/seed-group.ts",
+    "set-webhook": "tsx --env-file=../../.env scripts/set-webhook.ts"
   },
   "dependencies": {
     "@angiday/db": "workspace:*",
