@@ -15,6 +15,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -29,3 +30,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm check
+
+      # Proves Next compiles the JIT workspace packages on a clean checkout (Vercel does the same).
+      - run: pnpm turbo run build --filter @angiday/web

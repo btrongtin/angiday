@@ -4,8 +4,8 @@ High-level task checklist. Implementation steps live in `docs/plans/`, not here.
 
 ## Now / Next
 
-- **Now:** Phase 1 S0 — monorepo scaffolded on branch `s0-scaffold` ([slice plan](plans/phase-1/s0-scaffold.md)); waiting on account setup and the first green CI run on GitHub.
-- **Next:** Phase 1 S1 — walking skeleton (write its slice plan first).
+- **Now:** Phase 1 S0 done and merged ([slice plan](plans/phase-1/s0-scaffold.md)). Monorepo, CI and accounts are ready.
+- **Next:** Phase 1 S1 — walking skeleton. Write its slice plan first (`docs/plans/phase-1/s1-walking-skeleton.md`), then stop for the owner's review.
 
 ## Phase 0 — Planning & setup
 
@@ -28,7 +28,7 @@ High-level task checklist. Implementation steps live in `docs/plans/`, not here.
 
 Goal: share a Maps link in Telegram → place appears in the web list. Plan: [plans/phase-1-ingest-and-list.md](plans/phase-1-ingest-and-list.md) (slices, estimates, cut order).
 
-- [ ] S0 — Scaffold & accounts (~6h)
+- [x] S0 — Scaffold & accounts (~6h)
 - [ ] S1 — Walking skeleton: link → name saved → bot reply → web list (~14h)
 - [ ] S2 — Place details & area: URL feature id, Nominatim reverse geocoding, GADM HCMC polygons, `legacyDistrict`, `searchText` (~8h)
 - [ ] S3 — LLM extraction & tags: taxonomy enums, `generateObject` + retry, tag mapping, eval script (~10h)
@@ -77,3 +77,4 @@ Goal: share a Maps link in Telegram → place appears in the web list. Plan: [pl
 | 2026-10-10 | Resolved all Phase 0 questions (ADR-0008…0015: `/add`, Gemini via AI SDK, Google Places, Telegram chat via topics, taxonomy, area from polygons, pnpm + Turborepo, testing/observability); wrote Phase 1 plan | Function URL vs API Gateway kept as a plan-level choice (promote to ADR if needed) |
 | 2026-10-14 | Google Maps billing unavailable in Vietnam (prohibited territory); demo key forbids production use. ADR-0016 supersedes ADR-0010: place details from the Maps URL + Nominatim reverse geocoding; updated architecture, Phase 1 plan | Verify feature id and Nominatim address keys against real fixtures in S2 |
 | 2026-10-15 | S0 code: pnpm + Turborepo monorepo (shared, db, ai, ingest, infra, web), base tsconfig/ESLint/Vitest, CDK app with empty IngestStack, minimal Next.js app, GitHub Actions CI; `pnpm check` green locally (cold, 3×) | Owner account checklist (S0 Task 0), push + PR to see CI green, then tick S0 |
+| 2026-10-16 | S0 finished: owner set up accounts and the 5 SSM parameters, CI green on GitHub, PR #3 merged. Follow-ups: typed env (`packages/shared`: `parseEnv`, `appEnvShape`, `.env.example`), CI `next build` step + job timeout, `.gitattributes`, removed the temporary `SHARED_PACKAGE` export | Carried into S1: remove the `validateAgainstDefaultRules` override in `infra/lib/ingest-stack.test.ts` once the stack has a resource; add `@angiday/db` to web `transpilePackages` when web imports it; agree the web-login env var names (proposed in `.env.example`); AWS account items were confirmed by the owner, not re-verified by Claude |

@@ -2,7 +2,7 @@
 
 Restaurant saving & search for a small group (2 people for now). Users share Google Maps links into a Telegram group; a bot extracts structured place data with an LLM and stores it. A web app lets them browse/filter places and ask an AI chatbot.
 
-**Current phase:** Phase 1 — ingest + list (next: slice S0). Plan: [docs/plans/phase-1-ingest-and-list.md](docs/plans/phase-1-ingest-and-list.md). See [docs/progress.md](docs/progress.md) → "Now / Next".
+**Current phase:** Phase 1 — ingest + list (S0 done; next: slice S1). Plan: [docs/plans/phase-1-ingest-and-list.md](docs/plans/phase-1-ingest-and-list.md). See [docs/progress.md](docs/progress.md) → "Now / Next".
 
 ## Docs map
 
