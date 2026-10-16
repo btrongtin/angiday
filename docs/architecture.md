@@ -53,6 +53,8 @@ flowchart LR
 
 Rule: handlers stay thin, logic lives in `packages/*` ([ADR-0005](adr/0005-api-in-nextjs-nestjs-later.md)).
 
+Lambda config arrives as SSM parameter *names*, not values: CDK sets each function's env to `<NAME>_PARAM=<ssm-parameter-name>`, and the handler reads the real value from SSM at cold start (`services/ingest/src/lib/lambda-env.ts`), validated with the same `packages/shared` env schema the other runtimes use.
+
 ## Data model (intent)
 
 The field-level source of truth is the zod schemas in `packages/shared`. This section only covers structure and indexes.
@@ -61,9 +63,9 @@ The field-level source of truth is the zod schemas in `packages/shared`. This se
 |---|---|---|
 | `groups` | Tenant; links a Telegram chat to a group; stores registered topic ids (`saveThreadId`, `askThreadId`) | unique `telegramChatId` |
 | `members` | People in a group (Telegram user, display name); used for "added by" and per-person ratings | `{ groupId, telegramUserId }` unique |
-| `places` | One saved restaurant | `{ groupId, createdAt }`, `{ groupId, tagIds }` (multikey), `{ groupId, "area.legacyDistrict" }`, `location` 2dsphere (later) |
+| `places` | One saved restaurant | `{ groupId, createdAt }`, `{ groupId, "source.telegramUpdateId" }` unique (idempotent save), `{ groupId, tagIds }` (multikey, later), `{ groupId, "area.legacyDistrict" }` (later), `location` 2dsphere (later) |
 | `tags` | Per-group tag registry `{ name, normalized }` | `{ groupId, normalized }` unique |
-| `telegram_updates` | Processed `update_id`s for idempotency | unique `updateId`, TTL |
+| `telegram_updates` | Processed update ids for idempotency, scoped per group | `{ groupId, updateId }` unique, TTL 7 days on `createdAt` |
 | `chat_turns` | Recent Telegram chat turns per topic, for multi-turn context (Phase 2) | `{ groupId, threadId, createdAt }`, TTL |
 
 A place has **two independent statuses**:

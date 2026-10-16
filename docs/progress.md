@@ -4,8 +4,8 @@ High-level task checklist. Implementation steps live in `docs/plans/`, not here.
 
 ## Now / Next
 
-- **Now:** Phase 1 S0 done and merged ([slice plan](plans/phase-1/s0-scaffold.md)). Monorepo, CI and accounts are ready.
-- **Next:** Phase 1 S1 — walking skeleton. Write its slice plan first (`docs/plans/phase-1/s1-walking-skeleton.md`), then stop for the owner's review.
+- **Now:** Phase 1 S1 done ([slice plan](plans/phase-1/s1-walking-skeleton.md)). A Maps link posted in Telegram is saved and shows on the web list after login; confirmed end to end against real AWS + Atlas + Telegram.
+- **Next:** Phase 1 S2 — place details & area (feature id, Nominatim reverse geocoding, GADM polygons, `legacyDistrict`, `searchText`). Vercel deploy for the web app (S1 Task 12) is still open — deferred at the owner's request, not blocking.
 
 ## Phase 0 — Planning & setup
 
@@ -29,7 +29,7 @@ High-level task checklist. Implementation steps live in `docs/plans/`, not here.
 Goal: share a Maps link in Telegram → place appears in the web list. Plan: [plans/phase-1-ingest-and-list.md](plans/phase-1-ingest-and-list.md) (slices, estimates, cut order).
 
 - [x] S0 — Scaffold & accounts (~6h)
-- [ ] S1 — Walking skeleton: link → name saved → bot reply → web list (~14h)
+- [x] S1 — Walking skeleton: link → name saved → bot reply → web list (~14h)
 - [ ] S2 — Place details & area: URL feature id, Nominatim reverse geocoding, GADM HCMC polygons, `legacyDistrict`, `searchText` (~8h)
 - [ ] S3 — LLM extraction & tags: taxonomy enums, `generateObject` + retry, tag mapping, eval script (~10h)
 - [ ] S4 — Web filters incl. area aliases (~10h)
@@ -78,3 +78,4 @@ Goal: share a Maps link in Telegram → place appears in the web list. Plan: [pl
 | 2026-10-14 | Google Maps billing unavailable in Vietnam (prohibited territory); demo key forbids production use. ADR-0016 supersedes ADR-0010: place details from the Maps URL + Nominatim reverse geocoding; updated architecture, Phase 1 plan | Verify feature id and Nominatim address keys against real fixtures in S2 |
 | 2026-10-15 | S0 code: pnpm + Turborepo monorepo (shared, db, ai, ingest, infra, web), base tsconfig/ESLint/Vitest, CDK app with empty IngestStack, minimal Next.js app, GitHub Actions CI; `pnpm check` green locally (cold, 3×) | Owner account checklist (S0 Task 0), push + PR to see CI green, then tick S0 |
 | 2026-10-16 | S0 finished: owner set up accounts and the 5 SSM parameters, CI green on GitHub, PR #3 merged. Follow-ups: typed env (`packages/shared`: `parseEnv`, `appEnvShape`, `.env.example`), CI `next build` step + job timeout, `.gitattributes`, removed the temporary `SHARED_PACKAGE` export | Carried into S1: remove the `validateAgainstDefaultRules` override in `infra/lib/ingest-stack.test.ts` once the stack has a resource; add `@angiday/db` to web `transpilePackages` when web imports it; agree the web-login env var names (proposed in `.env.example`); AWS account items were confirmed by the owner, not re-verified by Claude |
+| 2026-10-16 | S1 done: web login env vars + per-runtime `loadAppEnv` subsets; Maps URL parser (pin-over-viewport, NFC, real owner fixtures); Telegram update schema + ingest-job routing; `@angiday/db` (client, groups/places/telegram_updates repos, indexes, `mongodb-memory-server-core` tests); ingest Lambda adapters (SSM env loader, Telegram API client, manual-redirect Maps link resolver); webhook + worker Lambda handlers (SQS partial batch failures, idempotent save+reply); CDK `IngestStack` (SQS+DLQ, 2 ARM64 Lambdas, Function URL, least-privilege IAM) deployed to `ap-southeast-1`; `seed:group`/`set-webhook` scripts; web login + place list. Full demo confirmed: real Maps link in the "Lưu quán" topic → bot replied "Đã lưu: …" → place visible on `http://localhost:3000` after login. Fixed along the way: two owner setup mistakes from S0 (SSM `/angiday/allowed-chat-ids` was missing its leading `-`; SSM `/angiday/mongodb-uri` had no database name, so the worker was reading the Atlas driver's default `test` db) — both corrected via `aws ssm put-parameter --overwrite`, values never printed. Also hit and worked around a Node.js v24.13+ Windows regression ([nodejs/node#61448](https://github.com/nodejs/node/issues/61448)) that breaks `mongodb+srv://` SRV DNS lookups locally; the owner's local `.env` now uses the standard (non-SRV) connection string, SSM (used by the Lambdas, which run on Linux) is unaffected | Vercel deploy (S1 Task 12) deferred at the owner's request — web app only verified locally so far, not yet reachable by the other group member. If Atlas ever rotates the Atlas shard hostnames, the owner's local non-SRV `MONGODB_URI` needs a fresh standard connection string from Atlas |
