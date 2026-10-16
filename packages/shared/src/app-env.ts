@@ -1,5 +1,8 @@
 import { z } from 'zod';
 import { parseEnv } from './env';
+import { objectIdSchema } from './ids';
+
+type EnvSource = Record<string, string | undefined>;
 
 /** Comma-separated Telegram chat ids ("-1001234567890,-1009876543210") → number[]; at least one id. */
 const chatIdList = z
@@ -24,11 +27,24 @@ export const appEnvShape = {
   TELEGRAM_WEBHOOK_SECRET: z.string().min(1),
   TELEGRAM_ALLOWED_CHAT_IDS: chatIdList,
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1),
+  WEB_LOGIN_USERNAME: z.string().min(1),
+  WEB_LOGIN_PASSWORD: z.string().min(12, 'must be at least 12 characters'),
+  SESSION_SECRET: z.string().min(32, 'must be at least 32 characters (openssl rand -hex 32)'),
+  GROUP_ID: objectIdSchema,
 } satisfies z.ZodRawShape;
 
 export type AppEnv = z.infer<z.ZodObject<typeof appEnvShape>>;
+export type AppEnvKey = keyof typeof appEnvShape;
 
-/** Call once at startup: `const env = loadAppEnv(process.env)`. Throws if a variable is missing or invalid. */
-export function loadAppEnv(source: Record<string, string | undefined>): AppEnv {
-  return parseEnv(appEnvShape, source);
+/**
+ * Call once at startup. Without `keys` every variable is required; with `keys` only those are
+ * validated and returned, so each runtime asks for exactly what it uses:
+ * `loadAppEnv(process.env, ['MONGODB_URI', 'GROUP_ID'])`. Throws if a variable is missing or invalid.
+ */
+export function loadAppEnv(source: EnvSource): AppEnv;
+export function loadAppEnv<K extends AppEnvKey>(source: EnvSource, keys: readonly K[]): Pick<AppEnv, K>;
+export function loadAppEnv(source: EnvSource, keys?: readonly AppEnvKey[]): Partial<AppEnv> {
+  if (!keys) return parseEnv(appEnvShape, source);
+  const shape = Object.fromEntries(keys.map((key) => [key, appEnvShape[key]])) as z.ZodRawShape;
+  return parseEnv(shape, source) as Partial<AppEnv>;
 }
