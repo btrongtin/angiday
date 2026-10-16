@@ -2,7 +2,7 @@
 
 Restaurant saving & search for a small group (2 people for now). Users share Google Maps links into a Telegram group; a bot extracts structured place data with an LLM and stores it. A web app lets them browse/filter places and ask an AI chatbot.
 
-**Current phase:** Phase 1 — ingest + list (S0 done; next: slice S1). Plan: [docs/plans/phase-1-ingest-and-list.md](docs/plans/phase-1-ingest-and-list.md). See [docs/progress.md](docs/progress.md) → "Now / Next".
+**Current phase:** Phase 1 — ingest + list (S1 done; next: slice S2). Plan: [docs/plans/phase-1-ingest-and-list.md](docs/plans/phase-1-ingest-and-list.md). See [docs/progress.md](docs/progress.md) → "Now / Next".
 
 ## Docs map
 
@@ -33,7 +33,7 @@ Tooling: pnpm workspaces + Turborepo, Just-in-Time internal packages ([ADR-0014]
 ```bash
 pnpm install                                  # install all workspaces
 pnpm check                                    # turbo lint + typecheck + test (what CI runs)
-pnpm --filter @angiday/<name> test            # one workspace that has tests (shared, ingest, infra)
+pnpm --filter @angiday/<name> test            # one workspace that has tests (shared, db, ingest, infra, web)
 pnpm --filter @angiday/web dev                # web on http://localhost:3000
 pnpm --filter @angiday/infra cdk synth        # CDK template → infra/cdk.out
 ```
