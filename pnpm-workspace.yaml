@@ -14,7 +14,6 @@ catalog:
 # pnpm 11+ fails install on dependency build scripts that are not listed here.
 allowBuilds:
   esbuild: true
-  sharp: true
   unrs-resolver: true
 
 minimumReleaseAgeExclude:
