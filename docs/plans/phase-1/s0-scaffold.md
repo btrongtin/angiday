@@ -63,7 +63,7 @@ apps/web/                       @angiday/web — minimal Next.js App Router page
 - Consumes: nothing.
 - Produces: branch `s0-scaffold`; accounts and SSM parameters needed from S1 on.
 
-- [ ] **Step 1: Create the branch**
+- [x] **Step 1: Create the branch**
 
 ```bash
 git switch -c s0-scaffold
@@ -72,7 +72,7 @@ git status --short
 
 Expected: ` M CLAUDE.md` (the owner's "Workflow per slice" section) and `?? docs/plans/phase-1/`. Nothing else.
 
-- [ ] **Step 2: Commit the plan and the workflow section (ask the owner first)**
+- [x] **Step 2: Commit the plan and the workflow section (ask the owner first)**
 
 ```bash
 git add CLAUDE.md docs/plans/phase-1/s0-scaffold.md
@@ -112,7 +112,7 @@ Before starting, explain in Vietnamese: pnpm workspaces vs. catalog, what Turbor
 - Consumes: nothing.
 - Produces: `@angiday/shared` exporting `SHARED_PACKAGE: '@angiday/shared'` (S0 wiring only; S1 replaces it with real schemas and deletes the wiring tests). Root scripts `pnpm lint | typecheck | test | check`. Base config files every later task extends: `tsconfig.base.json`, `eslint.config.mjs`.
 
-- [ ] **Step 1: Write root config files**
+- [x] **Step 1: Write root config files**
 
 `.nvmrc`:
 
@@ -258,7 +258,7 @@ next-env.d.ts
 *.tsbuildinfo
 ```
 
-- [ ] **Step 2: Write `@angiday/shared` package files (no source yet)**
+- [x] **Step 2: Write `@angiday/shared` package files (no source yet)**
 
 `packages/shared/package.json`:
 
@@ -294,7 +294,7 @@ next-env.d.ts
 }
 ```
 
-- [ ] **Step 3: Install**
+- [x] **Step 3: Install**
 
 ```bash
 pnpm install
@@ -302,7 +302,7 @@ pnpm install
 
 Expected: completes and writes `pnpm-lock.yaml`. If it fails with `ERR_PNPM_IGNORED_BUILDS`, read the listed package names, add each to `allowBuilds` in `pnpm-workspace.yaml` (`true` only for packages that need a native binary step, e.g. `esbuild`; `false` otherwise), tell the owner which ones and why, and re-run.
 
-- [ ] **Step 4: Write the failing test**
+- [x] **Step 4: Write the failing test**
 
 `packages/shared/src/index.test.ts`:
 
@@ -319,7 +319,7 @@ describe('@angiday/shared', () => {
 });
 ```
 
-- [ ] **Step 5: Run it to verify it fails**
+- [x] **Step 5: Run it to verify it fails**
 
 ```bash
 pnpm --filter @angiday/shared test
@@ -327,7 +327,7 @@ pnpm --filter @angiday/shared test
 
 Expected: FAIL — cannot resolve `./index` (file does not exist).
 
-- [ ] **Step 6: Write the minimal implementation**
+- [x] **Step 6: Write the minimal implementation**
 
 `packages/shared/src/index.ts`:
 
@@ -336,7 +336,7 @@ Expected: FAIL — cannot resolve `./index` (file does not exist).
 export const SHARED_PACKAGE = '@angiday/shared';
 ```
 
-- [ ] **Step 7: Run it to verify it passes**
+- [x] **Step 7: Run it to verify it passes**
 
 ```bash
 pnpm --filter @angiday/shared test
@@ -344,7 +344,7 @@ pnpm --filter @angiday/shared test
 
 Expected: PASS, 1 test.
 
-- [ ] **Step 8: Run the full gate through Turbo**
+- [x] **Step 8: Run the full gate through Turbo**
 
 ```bash
 pnpm check
@@ -352,7 +352,7 @@ pnpm check
 
 Expected: `@angiday/shared:lint`, `:typecheck`, `:test` all succeed; summary `3 successful, 3 total`. Run it again: `FULL TURBO` (all cache hits).
 
-- [ ] **Step 9: Prove each gate can fail (Review Focus 1)**
+- [x] **Step 9: Prove each gate can fail (Review Focus 1)**
 
 Temporarily append to `packages/shared/src/index.ts`:
 
@@ -366,7 +366,7 @@ Temporarily change the assertion in `index.test.ts` to `.toBe('wrong')`, run `pn
 
 Run `pnpm check`. Expected: green again.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add .nvmrc package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json tsconfig.base.json eslint.config.mjs .gitignore packages/shared
@@ -390,7 +390,7 @@ Before committing, `git status --short` must show no `.env` and no `node_modules
 - Consumes: `SHARED_PACKAGE` from `@angiday/shared` (Task 1).
 - Produces: workspaces `@angiday/db`, `@angiday/ai`, `@angiday/ingest` with `lint` + `typecheck` (+ `test` for ingest). No runtime exports yet.
 
-- [ ] **Step 1: Write `@angiday/db`**
+- [x] **Step 1: Write `@angiday/db`**
 
 `packages/db/package.json`:
 
@@ -434,7 +434,7 @@ Before committing, `git status --short` must show no `.env` and no `node_modules
 export {};
 ```
 
-- [ ] **Step 2: Write `@angiday/ai`**
+- [x] **Step 2: Write `@angiday/ai`**
 
 `packages/ai/package.json`:
 
@@ -478,7 +478,7 @@ export {};
 export {};
 ```
 
-- [ ] **Step 3: Write `@angiday/ingest` package files**
+- [x] **Step 3: Write `@angiday/ingest` package files**
 
 `services/ingest/package.json`:
 
@@ -517,7 +517,7 @@ export {};
 }
 ```
 
-- [ ] **Step 4: Write the cross-package wiring test**
+- [x] **Step 4: Write the cross-package wiring test**
 
 `services/ingest/src/workspace-wiring.test.ts`:
 
@@ -534,7 +534,7 @@ describe('workspace wiring', () => {
 });
 ```
 
-- [ ] **Step 5: Run it before linking to verify it fails**
+- [x] **Step 5: Run it before linking to verify it fails**
 
 ```bash
 pnpm --filter @angiday/ingest test
@@ -542,7 +542,7 @@ pnpm --filter @angiday/ingest test
 
 Expected: FAIL — `vitest` not found or `Failed to resolve import "@angiday/shared"` (the workspace is not installed yet).
 
-- [ ] **Step 6: Install and run the gate**
+- [x] **Step 6: Install and run the gate**
 
 ```bash
 pnpm install
@@ -551,7 +551,7 @@ pnpm check
 
 Expected: install links the three new workspaces; `pnpm check` runs lint+typecheck for db, ai, ingest, shared and test for shared, ingest; all succeed.
 
-- [ ] **Step 7: Prove the Turbo cache follows dependencies (Review Focus 2)**
+- [x] **Step 7: Prove the Turbo cache follows dependencies (Review Focus 2)**
 
 ```bash
 pnpm check
@@ -567,7 +567,7 @@ Expected: `@angiday/ingest:typecheck` and `@angiday/ingest:test` show `cache mis
 
 If they show `cache hit, replaying logs` instead, the `transit` task in `turbo.json` is wrong — fix it before moving on.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/db packages/ai services/ingest pnpm-lock.yaml
@@ -589,7 +589,7 @@ Before starting, explain in Vietnamese: CDK App → Stack → Construct, what `c
 - Consumes: root `tsconfig.base.json`, `eslint.config.mjs` (Task 1).
 - Produces: `AWS_REGION = 'ap-southeast-1'` from `infra/lib/config.ts`; `class IngestStack extends Stack` from `infra/lib/ingest-stack.ts` (S1 adds the Lambdas, SQS, DLQ, SSM reads here); CDK app entry `infra/bin/angiday.ts` creating stack id `AngidayIngest`; script `pnpm --filter @angiday/infra cdk <cmd>`.
 
-- [ ] **Step 1: Write package files**
+- [x] **Step 1: Write package files**
 
 `infra/package.json` (no `"type": "module"`: CDK libraries are CommonJS, and tsx runs the app as CommonJS without ESM interop issues):
 
@@ -631,7 +631,7 @@ Before starting, explain in Vietnamese: CDK App → Stack → Construct, what `c
 }
 ```
 
-- [ ] **Step 2: Write `cdk.json` with the current feature flags**
+- [x] **Step 2: Write `cdk.json` with the current feature flags**
 
 Generate a throwaway CDK project in the scratchpad (outside the repo) to copy its recommended feature flags:
 
@@ -652,7 +652,7 @@ pnpm dlx aws-cdk@2.1145.0 init app --language typescript --generate-only
 
 and replace `{}` with the copied `"context"` object verbatim. Do not copy its `"app"` or `"watch"` keys.
 
-- [ ] **Step 3: Install**
+- [x] **Step 3: Install**
 
 ```bash
 pnpm install
@@ -660,7 +660,7 @@ pnpm install
 
 Expected: `aws-cdk-lib`, `constructs`, `aws-cdk`, `tsx` installed for `@angiday/infra`. Handle `ERR_PNPM_IGNORED_BUILDS` as in Task 1 Step 3.
 
-- [ ] **Step 4: Write the failing test**
+- [x] **Step 4: Write the failing test**
 
 `infra/lib/ingest-stack.test.ts`:
 
@@ -682,7 +682,7 @@ describe('IngestStack', () => {
 });
 ```
 
-- [ ] **Step 5: Run it to verify it fails**
+- [x] **Step 5: Run it to verify it fails**
 
 ```bash
 pnpm --filter @angiday/infra test
@@ -690,7 +690,7 @@ pnpm --filter @angiday/infra test
 
 Expected: FAIL — cannot resolve `./config` / `./ingest-stack`.
 
-- [ ] **Step 6: Write the minimal implementation**
+- [x] **Step 6: Write the minimal implementation**
 
 `infra/lib/config.ts`:
 
@@ -722,7 +722,7 @@ new IngestStack(app, 'AngidayIngest', {
 });
 ```
 
-- [ ] **Step 7: Run it to verify it passes**
+- [x] **Step 7: Run it to verify it passes**
 
 ```bash
 pnpm --filter @angiday/infra test
@@ -730,7 +730,7 @@ pnpm --filter @angiday/infra test
 
 Expected: PASS, 1 test.
 
-- [ ] **Step 8: Synthesize locally**
+- [x] **Step 8: Synthesize locally**
 
 ```bash
 pnpm --filter @angiday/infra cdk synth
@@ -744,7 +744,7 @@ git status --short infra
 
 Expected: `infra/cdk.out/` does **not** appear (ignored).
 
-- [ ] **Step 9: Run the gate**
+- [x] **Step 9: Run the gate**
 
 ```bash
 pnpm check
@@ -752,7 +752,7 @@ pnpm check
 
 Expected: all tasks succeed, including `@angiday/infra:lint`, `:typecheck`, `:test`.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add infra pnpm-lock.yaml
@@ -771,7 +771,7 @@ git commit -m "chore: add CDK app with empty IngestStack"
 - Consumes: `SHARED_PACKAGE` from `@angiday/shared` (Task 1).
 - Produces: workspace `@angiday/web` with `dev`, `build`, `start`, `lint`, `typecheck`; `next.config.ts` with `transpilePackages` (S1 adds `@angiday/db`, later `@angiday/ai`). No `test` script yet (Testing Library arrives in S4).
 
-- [ ] **Step 1: Write package files**
+- [x] **Step 1: Write package files**
 
 `apps/web/package.json`:
 
@@ -848,7 +848,7 @@ export default defineConfig([
 ]);
 ```
 
-- [ ] **Step 2: Write the app**
+- [x] **Step 2: Write the app**
 
 `apps/web/app/layout.tsx`:
 
@@ -885,7 +885,7 @@ export default function HomePage() {
 }
 ```
 
-- [ ] **Step 3: Install**
+- [x] **Step 3: Install**
 
 ```bash
 pnpm install
@@ -893,7 +893,7 @@ pnpm install
 
 Expected: Next, React, eslint-config-next installed. Handle `ERR_PNPM_IGNORED_BUILDS` as in Task 1 Step 3 (`sharp` and `unrs-resolver` are pre-approved).
 
-- [ ] **Step 4: Typecheck**
+- [x] **Step 4: Typecheck**
 
 ```bash
 pnpm --filter @angiday/web typecheck
@@ -901,7 +901,7 @@ pnpm --filter @angiday/web typecheck
 
 Expected: `next typegen` writes `next-env.d.ts` and `.next/types`, then `tsc` exits 0.
 
-- [ ] **Step 5: Lint**
+- [x] **Step 5: Lint**
 
 ```bash
 pnpm --filter @angiday/web lint
@@ -909,7 +909,7 @@ pnpm --filter @angiday/web lint
 
 Expected: exit 0, no warnings.
 
-- [ ] **Step 6: Run the dev server and look at the page**
+- [x] **Step 6: Run the dev server and look at the page**
 
 ```bash
 pnpm --filter @angiday/web dev
@@ -917,7 +917,7 @@ pnpm --filter @angiday/web dev
 
 Open http://localhost:3000. Expected: heading "AnGiDay" and "Scaffold OK (@angiday/shared)". Stop the server.
 
-- [ ] **Step 7: Production build compiles the JIT package (Review Focus 5)**
+- [x] **Step 7: Production build compiles the JIT package (Review Focus 5)**
 
 ```bash
 pnpm --filter @angiday/web build
@@ -927,7 +927,7 @@ Expected: build succeeds and lists route `/`. If Next rewrites `apps/web/tsconfi
 
 Then temporarily remove `'@angiday/shared'` from `transpilePackages` and build again. Record whether the build fails; restore the line either way. (Next 16 may compile workspace TypeScript without it; we keep it because ADR-0014 relies on it and Lambdas/other consumers do not share Next's defaults.)
 
-- [ ] **Step 8: Run the gate**
+- [x] **Step 8: Run the gate**
 
 ```bash
 pnpm check
@@ -935,7 +935,7 @@ pnpm check
 
 Expected: all tasks succeed, including `@angiday/web:lint` and `@angiday/web:typecheck`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add apps/web pnpm-lock.yaml
@@ -958,7 +958,7 @@ Before starting, explain in Vietnamese: what a GitHub Actions workflow/job/step 
 - Consumes: root `pnpm check` (Task 1), `.nvmrc`, `packageManager`.
 - Produces: workflow `CI`, job `check`, running on every PR and on pushes to `main`.
 
-- [ ] **Step 1: Write the workflow**
+- [x] **Step 1: Write the workflow**
 
 `.github/workflows/ci.yml`:
 
@@ -996,7 +996,7 @@ jobs:
       - run: pnpm check
 ```
 
-- [ ] **Step 2: Verify ignore rules (Review Focus 4)**
+- [x] **Step 2: Verify ignore rules (Review Focus 4)**
 
 ```bash
 git check-ignore -v .env apps/web/.env.local services/ingest/.env.production infra/cdk.out/manifest.json apps/web/next-env.d.ts apps/web/tsconfig.tsbuildinfo
@@ -1010,7 +1010,7 @@ git check-ignore .env.example; echo "exit=$?"
 
 Expected: no path printed, `exit=1` (`.env.example` stays committable).
 
-- [ ] **Step 3: Simulate the CI install locally (Review Focus 3)**
+- [x] **Step 3: Simulate the CI install locally (Review Focus 3)**
 
 ```bash
 pnpm install --frozen-lockfile
@@ -1018,7 +1018,7 @@ pnpm install --frozen-lockfile
 
 Expected: `Lockfile is up to date`, no `ERR_PNPM_OUTDATED_LOCKFILE`, no `ERR_PNPM_IGNORED_BUILDS`.
 
-- [ ] **Step 4: Simulate a cold CI run**
+- [x] **Step 4: Simulate a cold CI run**
 
 ```bash
 pnpm turbo run lint typecheck test --force
@@ -1026,7 +1026,7 @@ pnpm turbo run lint typecheck test --force
 
 Expected: every task executes (no cache) and succeeds. This is what CI runs on a fresh machine.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add .github/workflows/ci.yml
@@ -1045,7 +1045,7 @@ git commit -m "ci: run turbo lint typecheck test on PRs"
 - Consumes: everything above.
 - Produces: documented commands; S0 ticked.
 
-- [ ] **Step 1: Fill in CLAUDE.md → Commands**
+- [x] **Step 1: Fill in CLAUDE.md → Commands**
 
 Replace the line `_TBD once the monorepo is scaffolded._ Tooling: pnpm workspaces + Turborepo, Just-in-Time internal packages ([ADR-0014](docs/adr/0014-pnpm-turborepo-jit-packages.md)).` with:
 
@@ -1063,7 +1063,7 @@ pnpm --filter @angiday/infra cdk synth        # CDK template → infra/cdk.out
 Version pins: TypeScript `~6.0` (typescript-eslint peer), ESLint 9 (eslint-config-next plugins). Shared tool versions live in the `catalog` of `pnpm-workspace.yaml`.
 ````
 
-- [ ] **Step 2: Verification (REQUIRED SUB-SKILL: superpowers:verification-before-completion)**
+- [x] **Step 2: Verification (REQUIRED SUB-SKILL: superpowers:verification-before-completion)**
 
 ```bash
 pnpm install --frozen-lockfile
@@ -1072,14 +1072,14 @@ pnpm turbo run lint typecheck test --force
 
 Expected: both succeed; paste the Turbo summary line for the owner.
 
-- [ ] **Step 3: Update progress.md**
+- [x] **Step 3: Update progress.md**
 
 In `docs/progress.md`:
 - Tick `- [x] S0 — Scaffold & accounts (~6h)` only if Task 0's account checklist is complete and CI is green (Step 5); otherwise leave it and note what is open.
 - Now/Next → **Now:** Phase 1 S0 done. **Next:** S1 — walking skeleton (write its slice plan first).
 - Session log row: `| <date> | S0: pnpm + Turborepo monorepo (shared, db, ai, ingest, infra, web), base tsconfig/ESLint/Vitest, CDK app with empty IngestStack, minimal Next.js app, GitHub Actions CI | <open account items, or —> |`
 
-- [ ] **Step 4: Commit docs**
+- [x] **Step 4: Commit docs**
 
 ```bash
 git add CLAUDE.md docs/progress.md
@@ -1095,3 +1095,16 @@ git push -u origin s0-scaffold
 ```
 
 Open a PR to `main`. Expected: the `CI / check` job turns green on the PR — this is the S0 demo. If it fails, fix on the branch (systematic-debugging) before merging; do not merge red.
+
+---
+
+## Execution notes (2026-10-15/16)
+
+Deviations from the steps above, so the next reader does not re-derive them.
+
+- **pnpm `minimumReleaseAgeExclude`:** pnpm 12 added entries to `pnpm-workspace.yaml` for packages released very recently (vitest, next, react…). Kept.
+- **`infra/vitest.config.mts`** (not in the plan): `testTimeout` 30s. The CDK synth test timed out at the 5s default when the full gate ran cold in parallel. `.mts` because `infra` is CommonJS (no `"type": "module"`).
+- **`infra/lib/ingest-stack.test.ts`** builds the `App` with the `context` from `infra/cdk.json`, so it synthesizes with the same feature flags as `cdk synth`. It overrides `@aws-cdk/core:validateAgainstDefaultRules` to `false` because the empty S0 stack fails it. **Remove that override in S1** when the stack gets its first resource.
+- **`apps/web/AGENTS.md`** is generated by `next dev` (Next 16.4). It is not part of this plan; the owner commits it separately.
+- **Task 4 has no unit test:** it is scaffolding; its gates are typecheck, lint, `next build` and the dev page returning 200.
+- **Still open:** Task 0 Step 3 (owner accounts) and Task 6 Step 5 (push, PR, green CI run). S0 is ticked in `progress.md` only after both.

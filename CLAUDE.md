@@ -33,7 +33,7 @@ Tooling: pnpm workspaces + Turborepo, Just-in-Time internal packages ([ADR-0014]
 ```bash
 pnpm install                                  # install all workspaces
 pnpm check                                    # turbo lint + typecheck + test (what CI runs)
-pnpm --filter @angiday/<name> test            # one workspace (shared, db, ai, ingest, infra, web)
+pnpm --filter @angiday/<name> test            # one workspace that has tests (shared, ingest, infra)
 pnpm --filter @angiday/web dev                # web on http://localhost:3000
 pnpm --filter @angiday/infra cdk synth        # CDK template → infra/cdk.out
 ```
