@@ -9,6 +9,7 @@ catalog:
   eslint: ^9.39.5
   typescript: ~6.0.3
   vitest: ^5.0.5
+  zod: ^4.6.7
 
 # pnpm 11+ fails install on dependency build scripts that are not listed here.
 allowBuilds:
