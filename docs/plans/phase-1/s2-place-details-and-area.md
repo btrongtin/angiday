@@ -84,19 +84,19 @@ apps/web/app/page.tsx                              address + area label + attrib
 
 **Interfaces:** Produces: branch `s2-place-details-and-area`; ADR-0018; 6 Nominatim fixture files for Task 5.
 
-- [ ] **Step 1: Branch from an up-to-date main**
+- [x] **Step 1: Branch from an up-to-date main**
 
 ```bash
 git switch main && git pull && git switch -c s2-place-details-and-area
 ```
 
-- [ ] **Step 2: Write ADR-0018** in the house format (Status Accepted, Date, "Partially supersedes: ADR-0013 (data source and the q2/q9 → thu_duc alias line)"). Content to record:
+- [x] **Step 2: Write ADR-0018** in the house format (Status Accepted, Date, "Partially supersedes: ADR-0013 (data source and the q2/q9 → thu_duc alias line)"). Content to record:
   - Context: ADR-0013 planned to commit GADM-derived JSON; GADM licence: "Redistribution or commercial use is not allowed without prior permission"; the repo is public (portfolio).
   - Options: (1) GADM downloaded at build time, never committed — extra build step, still bundled into a deployed artefact; (2) **geoBoundaries gbOpen VNM ADM2** (boundaryID `VNM-ADM2-81297802`, year 2020, source OCHA ROAP / Government of Viet Nam, CC BY 3.0 IGO) — committable with attribution; (3) OSM admin boundaries (ODbL) — post-reform OSM no longer reliably maps the old districts, share-alike.
   - Decision: option 2, pinned to commit `9469f09`; select the 24 HCMC features by `shapeID`; no simplification (~180 KB at 5 decimals); keys keep the 2020 split `q2`, `q9`, `thu_duc`; S4's alias table maps "thủ đức"/"tp thủ đức" to all three.
   - Consequences: attribution in `SOURCE.md`, README and the web footer; verified at plan time that 12 known landmarks land in the right district (see Task 3 tests).
 
-- [ ] **Step 3: Commit plan + ADR (ask the owner first)**
+- [x] **Step 3: Commit plan + ADR (ask the owner first)**
 
 ```bash
 git add docs/plans/phase-1/s2-place-details-and-area.md docs/adr/0018-district-polygons-from-geoboundaries.md docs/adr/README.md docs/adr/0013-area-legacy-district-from-polygons.md docs/progress.md
@@ -128,7 +128,7 @@ URL template: `https://nominatim.openstreetmap.org/reverse?format=jsonv2&address
 **Interfaces:**
 - Produces: `ParsedMapsPlace` gains `featureId: string | null` (lower-case `0x<hex>:0x<hex>`). `extractMapsUrl(text: string): string | null` now always returns a URL with a scheme.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Fixtures — add `featureId` to every `expected` in `placeUrlFixtures`:
 
@@ -158,11 +158,11 @@ New `extractMapsUrl` cases (in the existing `it.each`):
 
 New null cases: `['look-alike host', 'fakegoogle.com/maps/place/X']`, `['look-alike short host', 'evilmaps.app.goo.gl/AbC']`, `['goo.gl link that is not Maps', 'goo.gl/AbC123']`.
 
-- [ ] **Step 2: Run — expect the new cases to FAIL**
+- [x] **Step 2: Run — expect the new cases to FAIL**
 
 Run: `pnpm --filter @angiday/shared test -- maps-url`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 - Feature id: `const FEATURE_ID = /!1s(0x[0-9a-f]+:0x[0-9a-f]+)/i;` matched on `parsed.pathname`, `.toLowerCase()`, else `null`.
 - URL in text — one regex, optional scheme, a look-behind so a host can't be the tail of another word, and curly quotes / guillemets excluded from the URL body:
@@ -174,9 +174,9 @@ const MAPS_URL_IN_TEXT =
 
   Prefix `https://` when group 1 is empty; keep the trailing-punctuation strip. Update the doc comment.
 
-- [ ] **Step 4: Run — expect PASS** (`pnpm --filter @angiday/shared test`), then `pnpm --filter @angiday/shared typecheck` (callers of `ParsedMapsPlace` still compile — the worker only reads `name/lat/lng` until Task 6).
+- [x] **Step 4: Run — expect PASS** (`pnpm --filter @angiday/shared test`), then `pnpm --filter @angiday/shared typecheck` (callers of `ParsedMapsPlace` still compile — the worker only reads `name/lat/lng` until Task 6).
 
-- [ ] **Step 5: Commit** — `feat(shared): parse Maps feature id; accept links in curly quotes or without https`
+- [x] **Step 5: Commit** — `feat(shared): parse Maps feature id; accept links in curly quotes or without https`
 
 ---
 
@@ -189,7 +189,7 @@ const MAPS_URL_IN_TEXT =
 **Interfaces:**
 - Produces: `normalizeForSearch(text: string): string`. (`buildPlaceSearchText` is added to this file in Task 4.)
 
-- [ ] **Step 1: Write the failing tests** — `it.each` on `normalizeForSearch`:
+- [x] **Step 1: Write the failing tests** — `it.each` on `normalizeForSearch`:
 
 | input | expected |
 |---|---|
@@ -201,10 +201,10 @@ const MAPS_URL_IN_TEXT =
 | `'Coffee + Tea'` | `'coffee tea'` |
 | `''` | `''` |
 
-- [ ] **Step 2: Run — FAIL** (`pnpm --filter @angiday/shared test -- search-text`)
-- [ ] **Step 3: Implement** — NFD → drop `\p{M}` → `đ/Đ` → `d` → lower-case → runs of `[^\p{L}\p{N}]` → one space → trim.
-- [ ] **Step 4: Run — PASS**
-- [ ] **Step 5: Commit** — `feat(shared): add accent-free search normalisation`
+- [x] **Step 2: Run — FAIL** (`pnpm --filter @angiday/shared test -- search-text`)
+- [x] **Step 3: Implement** — NFD → drop `\p{M}` → `đ/Đ` → `d` → lower-case → runs of `[^\p{L}\p{N}]` → one space → trim.
+- [x] **Step 4: Run — PASS**
+- [x] **Step 5: Commit** — `feat(shared): add accent-free search normalisation`
 
 ---
 
@@ -249,7 +249,7 @@ Keys and their geoBoundaries `shapeID` (verified against commit `9469f09`; `Binh
 | `tan_phu` | Tan Phu | `81297802B97138813252769` |
 | `thu_duc` | Thu Duc | `81297802B1678031067910` |
 
-- [ ] **Step 1: Generate the data**
+- [x] **Step 1: Generate the data**
 
 `build-hcmc-districts.mjs <input.geojson>` (plain Node ESM, no deps; the key → shapeID table above lives in the script): select the 24 features by `shapeID`, fail loudly if any id is missing/duplicated or a geometry is not a `Polygon`, round coordinates to 5 decimals, write a `FeatureCollection` whose features are `{ type: 'Feature', bbox: [minLng, minLat, maxLng, maxLat], properties: { key }, geometry }` to `src/area/hcmc-legacy-districts.json`.
 
@@ -262,7 +262,7 @@ node packages/shared/scripts/build-hcmc-districts.mjs "$TMP/vnm-adm2.geojson"
 
 `SOURCE.md`: dataset name, boundaryID `VNM-ADM2-81297802`, commit `9469f09`, year represented 2020, source "OCHA ROAP, Government of Viet Nam", licence CC BY 3.0 IGO with link, "selected 24 HCMC districts by shapeID, coordinates rounded to 5 decimals, no other changes", and the two commands above.
 
-- [ ] **Step 2: Write the failing tests** (`find-legacy-district.test.ts`)
+- [x] **Step 2: Write the failing tests** (`find-legacy-district.test.ts`)
 
 ```ts
 it.each([
@@ -291,10 +291,10 @@ it.each([
 
 Plus: `pointInPolygon` on a 10×10 square with a 2×2 hole → centre of hole `false`, a point between hole and edge `true`, outside `false`; data file has exactly 24 features whose keys equal `LEGACY_DISTRICT_KEYS` as a set.
 
-- [ ] **Step 3: Run — FAIL**
-- [ ] **Step 4: Implement** — `legacy-districts.ts`: keys tuple + schema. `find-legacy-district.ts`: import the JSON, validate it once at module load with a small zod schema (`properties.key` must be `legacyDistrictSchema`), then for each feature: skip if outside `bbox`, else `pointInPolygon` (ray casting on ring 0, minus holes). First hit wins. Use `with { type: 'json' }` on the import only if `tsc` asks for it.
-- [ ] **Step 5: Run — PASS**; also `pnpm --filter @angiday/shared lint typecheck`
-- [ ] **Step 6: Commit** — `feat(shared): add HCMC legacy district polygons and point-in-polygon lookup` (stage the script, JSON, SOURCE.md, sources, tests, package.json, index.ts)
+- [x] **Step 3: Run — FAIL**
+- [x] **Step 4: Implement** — `legacy-districts.ts`: keys tuple + schema. `find-legacy-district.ts`: import the JSON, validate it once at module load with a small zod schema (`properties.key` must be `legacyDistrictSchema`), then for each feature: skip if outside `bbox`, else `pointInPolygon` (ray casting on ring 0, minus holes). First hit wins. Use `with { type: 'json' }` on the import only if `tsc` asks for it.
+- [x] **Step 5: Run — PASS**; also `pnpm --filter @angiday/shared lint typecheck`
+- [x] **Step 6: Commit** — `feat(shared): add HCMC legacy district polygons and point-in-polygon lookup` (stage the script, JSON, SOURCE.md, sources, tests, package.json, index.ts)
 
 ---
 
@@ -315,7 +315,7 @@ Plus: `pointInPolygon` on a 10×10 square with a 2×2 hole → centre of hole `f
   - `NewTelegramPlace = Pick<Place, 'name' | 'mapsUrl' | 'mapsFeatureId' | 'location' | 'address' | 'area' | 'source'>` (no `searchText`: the repository derives it).
 - Produces (db): `upsertPlaceFromTelegram` sets the four new fields (`searchText` from `buildPlaceSearchText`); `listPlaces` returns S1-era documents with `mapsFeatureId: null`, `address: null`, `area: EMPTY_AREA`, `searchText: buildPlaceSearchText(...)`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `legacy-districts.test.ts` — `formatAreaLabel`:
 
@@ -335,10 +335,10 @@ Plus: `Object.keys(LEGACY_DISTRICTS)` equals `LEGACY_DISTRICT_KEYS` as a set.
 - `'stores feature id, address, area and a derived searchText'` — upsert with `address: '12 Trần Quang Khải, Phường Tân Định'`, `area: { legacyDistrict: 'q1', ward: 'Phường Tân Định', city: 'Thành phố Hồ Chí Minh' }`, name `'Phở Hòa'` → returned place has those values and `searchText` containing `'pho hoa'`, `'phuong tan dinh'` and `'quan 1'`.
 - `'reads a place saved before S2 (no address/area fields)'` — `insertOne` a doc without the four fields (as the S1 test already does for `needs_info`, but `ingestStatus: 'saved'`) → `listPlaces` returns it with `mapsFeatureId: null`, `address: null`, `area: EMPTY_AREA`, `searchText: normalizeForSearch(name)`.
 
-- [ ] **Step 2: Run — FAIL** (`pnpm --filter @angiday/shared test`, `pnpm --filter @angiday/db test`)
-- [ ] **Step 3: Implement** — in `collections.ts` make the four new fields optional on `PlaceDoc` (comment: "absent on places saved before S2"); `toPlace` fills the defaults; `upsertPlaceFromTelegram` `$set`s them plus `searchText`.
-- [ ] **Step 4: Run — PASS**, then `pnpm check` (the worker's call to `upsertPlaceFromTelegram` now fails typecheck — expected until Task 6; if you want the tree green at this commit, pass `mapsFeatureId: parsed.featureId, address: null, area: EMPTY_AREA` in the worker as a stop-gap and note it).
-- [ ] **Step 5: Commit** — `feat(shared,db): add address, area and searchText to places`
+- [x] **Step 2: Run — FAIL** (`pnpm --filter @angiday/shared test`, `pnpm --filter @angiday/db test`)
+- [x] **Step 3: Implement** — in `collections.ts` make the four new fields optional on `PlaceDoc` (comment: "absent on places saved before S2"); `toPlace` fills the defaults; `upsertPlaceFromTelegram` `$set`s them plus `searchText`.
+- [x] **Step 4: Run — PASS**, then `pnpm check` (the worker's call to `upsertPlaceFromTelegram` now fails typecheck — expected until Task 6; if you want the tree green at this commit, pass `mapsFeatureId: parsed.featureId, address: null, area: EMPTY_AREA` in the worker as a stop-gap and note it).
+- [x] **Step 5: Commit** — `feat(shared,db): add address, area and searchText to places`
 
 ---
 
@@ -372,7 +372,7 @@ Mapping rules (fixed against the real fixtures of 2026-10-23). Only the `address
 - `address`: when `address.road` exists → `[road, ward, city]` (nulls skipped) joined by `', '`; otherwise `null`. Never include `house_number`, `neighbourhood` ("Khu phố N") or POI keys (`amenity`, `highway`, `historic`, …): the house number belongs to whatever object Nominatim hit, not necessarily the restaurant.
 - `{ error: … }` body → `not_found`; non-2xx → `http_error`; fetch rejection/timeout → `network`; non-JSON or schema mismatch → `bad_response`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
   - `it.each` over the 6 fixtures → `parseNominatimReverse(fixture)` equals (all `kind: 'found'`):
 
 | fixture | address | ward | city |
@@ -391,10 +391,10 @@ Mapping rules (fixed against the real fixtures of 2026-10-23). Only the `address
     - `429` → `{ kind: 'none', reason: 'http_error' }`; `fetchFn` rejects (incl. a `TimeoutError` DOMException) → `network`; body `'<html>'` → `bad_response`. None of them throws.
   - `app-env.test.ts`: `loadAppEnv({}, ['NOMINATIM_BASE_URL'])` → default; a custom URL is kept; `'not a url'` throws.
 
-- [ ] **Step 2: Run — FAIL** (`pnpm --filter @angiday/ingest test -- nominatim`, `pnpm --filter @angiday/shared test -- app-env`)
-- [ ] **Step 3: Implement.** Build the request URL with `new URL('reverse', base.endsWith('/') ? base : base + '/')`; validate the body with a zod schema (`address: record<string, string>`; other fields ignored) or the `{ error: string }` shape. `.env.example`: add a commented `# NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org` under a new "Reverse geocoding (worker)" heading, noting it is optional and not a secret.
-- [ ] **Step 4: Run — PASS**
-- [ ] **Step 5: Commit** — `feat(ingest): add Nominatim reverse geocoding client` (stage the 6 fixture files too)
+- [x] **Step 2: Run — FAIL** (`pnpm --filter @angiday/ingest test -- nominatim`, `pnpm --filter @angiday/shared test -- app-env`)
+- [x] **Step 3: Implement.** Build the request URL with `new URL('reverse', base.endsWith('/') ? base : base + '/')`; validate the body with a zod schema (`address: record<string, string>`; other fields ignored) or the `{ error: string }` shape. `.env.example`: add a commented `# NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org` under a new "Reverse geocoding (worker)" heading, noting it is optional and not a secret.
+- [x] **Step 4: Run — PASS**
+- [x] **Step 5: Commit** — `feat(ingest): add Nominatim reverse geocoding client` (stage the 6 fixture files too)
 
 ---
 
@@ -412,18 +412,18 @@ Mapping rules (fixed against the real fixtures of 2026-10-23). Only the `address
 
 Pipeline after a successful parse: `reverseGeocode(lat, lng)` → on `none`, `logger.warn('Reverse geocoding found nothing; saving without address', { groupId, reason })` → `legacyDistrict = findLegacyDistrict(lat, lng)` → upsert with `mapsFeatureId`, `address`, `area` → reply `replySaved(place.name, formatAreaLabel(place.area))`. Unreadable links skip geocoding.
 
-- [ ] **Step 1: Write the failing tests** (`fixtures.ts`: add `TEST_PLACE_FEATURE_ID = '0x1:0x2'`; `TEST_PLACE_URL`'s pin 10.7895109, 106.6906025 is inside Q1 — checked at plan time. `deps()` gains `reverseGeocode` defaulting to `found` with `address: 'Đường Nguyễn Phi Khanh, Phường Tân Định, Thành phố Hồ Chí Minh'`, `ward: 'Phường Tân Định'`, `city: 'Thành phố Hồ Chí Minh'`.)
+- [x] **Step 1: Write the failing tests** (`fixtures.ts`: add `TEST_PLACE_FEATURE_ID = '0x1:0x2'`; `TEST_PLACE_URL`'s pin 10.7895109, 106.6906025 is inside Q1 — checked at plan time. `deps()` gains `reverseGeocode` defaulting to `found` with `address: 'Đường Nguyễn Phi Khanh, Phường Tân Định, Thành phố Hồ Chí Minh'`, `ward: 'Phường Tân Định'`, `city: 'Thành phố Hồ Chí Minh'`.)
   - Update `'saves the place and replies in the same topic'`: doc also has `mapsFeatureId: '0x1:0x2'`, the address, `area: { legacyDistrict: 'q1', ward: 'Phường Tân Định', city: 'Thành phố Hồ Chí Minh' }`, `searchText` containing `'phuong tan dinh'`; reply text `replySaved('Phở Hòa', 'Q1 · Phường Tân Định')`; `reverseGeocode` called with `(10.7895109, 106.6906025)`.
   - `'saves without address when reverse geocoding finds nothing, and warns'` — stub `{ kind: 'none', reason: 'http_error' }` → outcome `'saved'`, `address: null`, `area: { legacyDistrict: 'q1', ward: null, city: null }`, reply `replySaved('Phở Hòa', 'Q1')`, `logger.warn` called with a message and `expect.objectContaining({ groupId, reason: 'http_error' })`.
   - `'a place outside the old districts gets legacyDistrict null'` — resolver returns `https://www.google.com/maps/place/H%E1%BB%93+G%C6%B0%C6%A1m/@21.0287,105.8524,17z` → `area.legacyDistrict` `null`.
   - In the existing "chưa đọc được" test: `reverseGeocode` not called.
   - `ingest-stack.test.ts`: the worker's env includes `NOMINATIM_BASE_URL: 'https://nominatim.openstreetmap.org'`.
-- [ ] **Step 2: Run — FAIL** (`pnpm --filter @angiday/ingest test`, `pnpm --filter @angiday/infra test`)
-- [ ] **Step 3: Implement** the pipeline; `handler.ts` adds `reverseGeocode: createReverseGeocoder({ baseUrl: loadAppEnv(process.env, ['NOMINATIM_BASE_URL']).NOMINATIM_BASE_URL })` inside `getDeps`; the stack sets the worker env var from `config.ts`.
-- [ ] **Step 4: Run — PASS**, then `pnpm check` and `pnpm --filter @angiday/infra cdk synth` (bundles the polygon JSON into the worker; no AWS credentials needed).
-- [ ] **Step 5: Commit** — `feat(ingest): enrich saved places with address and area`
-- [ ] **Step 6: Deploy (owner session).** Owner runs `aws login --profile angiday`; then `pnpm --filter @angiday/infra cdk diff --profile angiday` (expect: worker code + one env var, nothing else) → `pnpm --filter @angiday/infra cdk deploy --profile angiday`.
-- [ ] **Step 7: Demo in Telegram.** Owner posts one of their real links in "Lưu quán". Expected reply: `Đã lưu: TÔ GHẸ - HỦ TIẾU GHẸ Tân Định — Q1 · Phường Tân Định` (the TÔ GHẸ link; the two Q2 links give `Q2 · Phường Bình Trưng` and `Q2 · Phường Cát Lái`). If the reply has only "Q1", read the worker log line `Reverse geocoding found nothing` for the reason (CloudWatch Logs Insights, filter by `updateId`).
+- [x] **Step 2: Run — FAIL** (`pnpm --filter @angiday/ingest test`, `pnpm --filter @angiday/infra test`)
+- [x] **Step 3: Implement** the pipeline; `handler.ts` adds `reverseGeocode: createReverseGeocoder({ baseUrl: loadAppEnv(process.env, ['NOMINATIM_BASE_URL']).NOMINATIM_BASE_URL })` inside `getDeps`; the stack sets the worker env var from `config.ts`.
+- [x] **Step 4: Run — PASS**, then `pnpm check` and `pnpm --filter @angiday/infra cdk synth` (bundles the polygon JSON into the worker; no AWS credentials needed).
+- [x] **Step 5: Commit** — `feat(ingest): enrich saved places with address and area`
+- [x] **Step 6: Deploy (owner session).** Owner runs `aws login --profile angiday`; then `pnpm --filter @angiday/infra cdk diff --profile angiday` (expect: worker code + one env var, nothing else) → `pnpm --filter @angiday/infra cdk deploy --profile angiday`.
+- [x] **Step 7: Demo in Telegram.** Owner posts one of their real links in "Lưu quán". Expected reply: `Đã lưu: TÔ GHẸ - HỦ TIẾU GHẸ Tân Định — Q1 · Phường Tân Định` (the TÔ GHẸ link; the two Q2 links give `Q2 · Phường Bình Trưng` and `Q2 · Phường Cát Lái`). If the reply has only "Q1", read the worker log line `Reverse geocoding found nothing` for the reason (CloudWatch Logs Insights, filter by `updateId`).
 
 ---
 
@@ -434,9 +434,9 @@ Pipeline after a successful parse: `reverseGeocode(lat, lng)` → on `none`, `lo
 
 **Interfaces:** Consumes `Place.address`, `Place.area`, `formatAreaLabel` (Task 4).
 
-- [ ] **Step 1: Implement.** Under each place link: the area label (when not null) and the address (when not null) on their own lines. Below the list, when the list is not empty, a `<footer>` with the two attribution lines from Global Constraints. No client components, no styling work (S4 does the card design).
-- [ ] **Step 2: Verify** — `pnpm --filter @angiday/web lint typecheck` and `pnpm --filter @angiday/web build`; then owner runs `pnpm --filter @angiday/web dev`, logs in at `http://localhost:3000`: the place from Task 6 shows "Q1 · Phường Tân Định" and "Đường Nguyễn Phi Khanh, Phường Tân Định, Thành phố Hồ Chí Minh"; S1-era places still render (name only); footer shows both attributions with working links.
-- [ ] **Step 3: Commit** — `feat(web): show address, area and data attribution on the place list`
+- [x] **Step 1: Implement.** Under each place link: the area label (when not null) and the address (when not null) on their own lines. Below the list, when the list is not empty, a `<footer>` with the two attribution lines from Global Constraints. No client components, no styling work (S4 does the card design).
+- [x] **Step 2: Verify** — `pnpm --filter @angiday/web lint typecheck` and `pnpm --filter @angiday/web build`; then owner runs `pnpm --filter @angiday/web dev`, logs in at `http://localhost:3000`: the place from Task 6 shows "Q1 · Phường Tân Định" and "Đường Nguyễn Phi Khanh, Phường Tân Định, Thành phố Hồ Chí Minh"; S1-era places still render (name only); footer shows both attributions with working links.
+- [x] **Step 3: Commit** — `feat(web): show address, area and data attribution on the place list`
 
 ---
 

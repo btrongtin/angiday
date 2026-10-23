@@ -74,7 +74,7 @@ A place has **two independent statuses**:
 
 Every place also stores a `searchText` field (normalized, accent-free) so free-text search is accent-insensitive.
 
-Area: `area: { city, ward, legacyDistrict }`. `ward`/`city` come from OpenStreetMap reverse geocoding as-is ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)); `legacyDistrict` (pre-2025 HCMC district) is derived at ingest by point-in-polygon on a static GeoJSON ([ADR-0013](adr/0013-area-legacy-district-from-polygons.md)).
+Area: `area: { city, ward, legacyDistrict }`. `ward`/`city` come from OpenStreetMap reverse geocoding as-is ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)); `legacyDistrict` (pre-2025 HCMC district) is derived at ingest by point-in-polygon on a static GeoJSON ([ADR-0013](adr/0013-area-legacy-district-from-polygons.md)) from geoBoundaries ADM2 ([ADR-0018](adr/0018-district-polygons-from-geoboundaries.md)); `q2`, `q9` and `thu_duc` are separate keys.
 
 ## Flows
 

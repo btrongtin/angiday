@@ -66,9 +66,9 @@ The thinnest path through **every** hop. Most AWS learning happens here.
 
 **Demo:** the saved place shows the address and `area` (e.g. "Q3 · Phường Xuân Hòa") on the web card, with OSM attribution.
 
-- URL parser: add feature id (`0x…:0x…`) and prefer pin coordinates (`!3d…!4d…`); no coordinates → `needs_info` (bot asks for a better link).
-- `reverseGeocode(lat, lng)` via Nominatim `/reverse` (identifying User-Agent, base URL from config, `accept-language=vi`); map address keys → `address`, `area.ward`, `area.city` using real response fixtures. Failure → save without address and log a warning. MSW tests.
-- Area data: download GADM level-2 Vietnam, extract pre-2025 HCMC districts, simplify with `mapshaper`, commit JSON + source/licence note in `packages/shared`.
+- URL parser: add feature id (`0x…:0x…`) and prefer pin coordinates (`!3d…!4d…`); no coordinates → S1 behaviour kept (reply "chưa đọc được", save nothing); `needs_info` moves to S5 together with the reply-to-bot flow.
+- `reverseGeocode(lat, lng)` via Nominatim `/reverse` (identifying User-Agent, base URL from config, `accept-language=vi`); map address keys → `address`, `area.ward`, `area.city` using real response fixtures. Failure → save without address and log a warning. Tests inject `fetch` (ADR-0017), not MSW.
+- Area data: geoBoundaries ADM2 (not GADM, whose licence forbids redistribution — [ADR-0018](../adr/0018-district-polygons-from-geoboundaries.md)); the 24 pre-2025 HCMC districts, no simplification, committed as JSON + `SOURCE.md` in `packages/shared`.
 - Point-in-polygon → `area.legacyDistrict`; `area.ward` / `area.city` from the Nominatim address.
 - Vietnamese text normalization → `searchText`.
 - Web: "© OpenStreetMap contributors" attribution where addresses are shown.
