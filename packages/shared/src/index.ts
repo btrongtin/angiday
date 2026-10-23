@@ -20,3 +20,4 @@ export {
   type Place,
   type VisitStatus,
 } from './place';
+export { LEGACY_DISTRICT_KEYS, legacyDistrictSchema, type LegacyDistrict } from './area/legacy-districts';
