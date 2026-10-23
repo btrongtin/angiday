@@ -75,3 +75,20 @@ describe('loadAppEnv', () => {
     });
   });
 });
+
+describe('NOMINATIM_BASE_URL', () => {
+  it('defaults to the public Nominatim instance', () => {
+    expect(loadAppEnv({}, ['NOMINATIM_BASE_URL']).NOMINATIM_BASE_URL).toBe('https://nominatim.openstreetmap.org');
+  });
+
+  it('keeps a custom URL', () => {
+    expect(loadAppEnv({ NOMINATIM_BASE_URL: 'https://geo.example.com/nominatim' }, ['NOMINATIM_BASE_URL']).NOMINATIM_BASE_URL).toBe(
+      'https://geo.example.com/nominatim',
+    );
+  });
+
+  it('rejects a value that is not a URL', () => {
+    expect(() => loadAppEnv({ NOMINATIM_BASE_URL: 'not a url' }, ['NOMINATIM_BASE_URL'])).toThrow(/NOMINATIM_BASE_URL/);
+  });
+});
+
