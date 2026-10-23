@@ -3,6 +3,29 @@ export { parseEnv } from './env';
 export { objectIdSchema } from './ids';
 export { extractMapsUrl, isGoogleMapsHost, parseMapsPlaceUrl, type ParsedMapsPlace } from './maps-url';
 export { buildPlaceSearchText, normalizeForSearch } from './text/search-text';
+export {
+  MAX_HIGHLIGHT_LENGTH,
+  MAX_HIGHLIGHTS,
+  MAX_TAG_NAME_LENGTH,
+  MAX_TAGS_PER_PLACE,
+  placeExtractionSchema,
+  type PlaceExtraction,
+} from './place-extraction';
+export {
+  CUISINE_KEYS,
+  CUISINE_LABELS,
+  cuisineSchema,
+  DISH_TYPE_KEYS,
+  DISH_TYPE_LABELS,
+  dishTypeSchema,
+  formatClassificationLine,
+  PRICE_RANGE_KEYS,
+  PRICE_RANGE_LABELS,
+  priceRangeSchema,
+  type Cuisine,
+  type DishType,
+  type PriceRange,
+} from './taxonomy';
 export { ingestJobSchema, type IngestJob } from './ingest-job';
 export { findMapsUrlInMessage, routeUpdate, type DropReason, type RouteDecision } from './route-update';
 export { telegramUpdateSchema, type TelegramMessage, type TelegramUpdate } from './telegram-update';
