@@ -1,4 +1,4 @@
-import { buildPlaceSearchText, EMPTY_AREA, type NewTelegramPlace, type Place } from '@angiday/shared';
+import { type Area, buildPlaceSearchText, EMPTY_AREA, type LegacyDistrict, type NewTelegramPlace, type Place } from '@angiday/shared';
 import type { Db } from 'mongodb';
 import { type PlaceDoc, placesCollection, toObjectId } from './collections';
 
@@ -72,4 +72,52 @@ export async function listPlaces(db: Db, groupId: string, options: { limit?: num
 export async function findPlaceByTelegramUpdate(db: Db, groupId: string, updateId: number): Promise<Place | null> {
   const doc = await placesCollection(db).findOne({ groupId: toObjectId(groupId), 'source.telegramUpdateId': updateId });
   return doc ? toPlace(doc) : null;
+}
+
+export interface BackfillOptions {
+  /** Injected so `packages/db` never imports the polygon data. */
+  findLegacyDistrict: (lat: number, lng: number) => LegacyDistrict | null;
+  dryRun?: boolean;
+}
+
+/**
+ * Gives places saved before S2/S3 the fields later queries rely on. Sets only fields that are missing (`undefined`) and never
+ * touches `updatedAt`; a place that already has everything is left alone. Does not call Nominatim or the LLM: old places
+ * keep `address: null`, empty classification and no tags.
+ */
+export async function backfillPlaceDefaults(
+  db: Db,
+  groupId: string,
+  options: BackfillOptions,
+): Promise<{ scanned: number; updated: number }> {
+  const collection = placesCollection(db);
+  let scanned = 0;
+  let updated = 0;
+  for await (const doc of collection.find({ groupId: toObjectId(groupId) })) {
+    scanned += 1;
+    const set: Record<string, unknown> = {};
+    if (doc.mapsFeatureId === undefined) set.mapsFeatureId = null;
+    if (doc.address === undefined) set.address = null;
+    if (doc.area === undefined) {
+      const [lng, lat] = doc.location.coordinates;
+      set.area = { city: null, ward: null, legacyDistrict: options.findLegacyDistrict(lat, lng) } satisfies Area;
+    }
+    if (doc.cuisine === undefined) set.cuisine = [];
+    if (doc.dishType === undefined) set.dishType = [];
+    if (doc.priceRange === undefined) set.priceRange = null;
+    if (doc.highlights === undefined) set.highlights = [];
+    if (doc.tagIds === undefined) set.tagIds = [];
+    if (doc.searchText === undefined) {
+      set.searchText = buildPlaceSearchText({
+        name: doc.name,
+        address: (set.address ?? doc.address ?? null) as string | null,
+        area: (set.area ?? doc.area ?? EMPTY_AREA) as Area,
+        highlights: (set.highlights ?? doc.highlights ?? []) as string[],
+      });
+    }
+    if (Object.keys(set).length === 0) continue;
+    updated += 1;
+    if (!options.dryRun) await collection.updateOne({ _id: doc._id }, { $set: set });
+  }
+  return { scanned, updated };
 }

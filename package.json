@@ -12,6 +12,7 @@
     "check": "turbo run lint typecheck test",
     "seed:group": "pnpm --filter @angiday/ingest run seed:group",
     "set-webhook": "pnpm --filter @angiday/ingest run set-webhook",
+    "backfill:places": "pnpm --filter @angiday/ingest run backfill:places",
     "eval:extract": "pnpm --filter @angiday/ai run eval:extract"
   },
   "devDependencies": {

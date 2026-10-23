@@ -8,7 +8,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "seed:group": "tsx --env-file=../../.env scripts/seed-group.ts",
-    "set-webhook": "tsx --env-file=../../.env scripts/set-webhook.ts"
+    "set-webhook": "tsx --env-file=../../.env scripts/set-webhook.ts",
+    "backfill:places": "tsx --env-file=../../.env scripts/backfill-places.ts"
   },
   "dependencies": {
     "@angiday/ai": "workspace:*",
