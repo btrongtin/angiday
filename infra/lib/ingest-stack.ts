@@ -96,7 +96,7 @@ export class IngestStack extends Stack {
         NOMINATIM_BASE_URL,
       },
     });
-    useParams(worker, ['MONGODB_URI', 'TELEGRAM_BOT_TOKEN']);
+    useParams(worker, ['MONGODB_URI', 'TELEGRAM_BOT_TOKEN', 'GOOGLE_GENERATIVE_AI_API_KEY']);
     worker.addEventSource(
       new SqsEventSource(queue, {
         batchSize: 1,
