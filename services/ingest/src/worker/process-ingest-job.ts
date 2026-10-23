@@ -9,7 +9,7 @@ import {
   markTelegramUpdateDone,
   upsertPlaceFromTelegram,
 } from '@angiday/db';
-import { type Area, formatAreaLabel, type IngestJob, matchTags, parseMapsPlaceUrl, stripMapsUrls } from '@angiday/shared';
+import { type Area, dropPlaceEcho, formatAreaLabel, type IngestJob, matchTags, parseMapsPlaceUrl, stripMapsUrls } from '@angiday/shared';
 import { findLegacyDistrict } from '@angiday/shared/legacy-district';
 import type { ReverseGeocode } from '../geo/nominatim';
 import type { Log } from '../lib/log';
@@ -88,14 +88,22 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
   };
   const address = geocoded.kind === 'found' ? geocoded.address : null;
 
-  const note = stripMapsUrls(job.text);
+  // The user's own words only: not the Maps link, nor the place name/address the Maps app adds to its share text.
+  const note = dropPlaceEcho(stripMapsUrls(job.text), [parsed.name, address ?? '']);
   const existingTags = await listTags(db, groupId);
   const extraction = await deps.extractPlaceDetails({
     note,
     place: { name: parsed.name, address, areaLabel: formatAreaLabel(area) },
     existingTagNames: existingTags.map((tag) => tag.name),
   });
-  const { tagIds, toCreate } = matchTags({ proposed: extraction.details.tags, existing: existingTags, note });
+  // Without any words of the user's own, price and tags would be guesses from the place name alone: leave them empty.
+  const hasNote = note.trim() !== '';
+  const priceRange = hasNote ? extraction.details.priceRange : null;
+  const { tagIds, toCreate } = matchTags({
+    proposed: hasNote ? extraction.details.tags : [],
+    existing: existingTags,
+    note,
+  });
   const created = await ensureTags(db, groupId, toCreate);
   const allTags = [...existingTags, ...created];
   const finalTagIds = [...new Set([...tagIds, ...created.map((tag) => tag.id)])];
@@ -109,7 +117,7 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
     area,
     cuisine: extraction.details.cuisine,
     dishType: extraction.details.dishType,
-    priceRange: extraction.details.priceRange,
+    priceRange,
     highlights: extraction.details.highlights,
     tagIds: finalTagIds,
     source: {

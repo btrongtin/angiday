@@ -258,3 +258,32 @@ describe('processIngestJob', () => {
     expect(sendMessage.mock.calls[1]?.[0].text).toBe(sendMessage.mock.calls[0]?.[0].text);
   });
 });
+
+describe('processIngestJob notes without the user own words', () => {
+  const EXTRACTED_WITH_GUESSES: ExtractionResult = {
+    ...EXTRACTED,
+    details: { ...EXTRACTED.details, priceRange: '50k_100k', tags: ['nhậu', 'hẹn hò'] },
+  };
+
+  it('creates no tag and no price when the note is only the Maps share text (place name)', async () => {
+    const before = (await listTags(db, groupId)).length;
+    const job = makeJob({ updateId: nextUpdateId++, text: 'Phở Hòa\nhttps://maps.app.goo.gl/AbC123xyz' });
+    const extract = vi.fn<Extract>().mockResolvedValue(EXTRACTED_WITH_GUESSES);
+
+    await processIngestJob(job, deps({ extractPlaceDetails: extract }));
+
+    expect(extract.mock.calls[0]?.[0].note).toBe('');
+    const saved = await places().findOne({ 'source.telegramUpdateId': job.updateId });
+    expect(saved).toMatchObject({ priceRange: null, tagIds: [] });
+    expect(await listTags(db, groupId)).toHaveLength(before);
+  });
+
+  it('creates no tag and no price for a link-only message', async () => {
+    const job = makeJob({ updateId: nextUpdateId++, text: 'https://maps.app.goo.gl/AbC123xyz' });
+
+    await processIngestJob(job, deps({ extractPlaceDetails: async () => EXTRACTED_WITH_GUESSES }));
+
+    const saved = await places().findOne({ 'source.telegramUpdateId': job.updateId });
+    expect(saved).toMatchObject({ priceRange: null, tagIds: [] });
+  });
+});
