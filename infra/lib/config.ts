@@ -15,3 +15,6 @@ export const SSM_PARAMS = {
 export type SsmParamKey = keyof typeof SSM_PARAMS;
 
 export const WORKER_TIMEOUT_SECONDS = 30;
+
+/** Not a secret, so a plain Lambda env var set by CDK instead of an SSM parameter (ADR-0016). */
+export const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';

@@ -7,6 +7,8 @@ export const TEST_SHORT_LINK = 'https://maps.app.goo.gl/AbC123xyz';
 export const TEST_PLACE_URL =
   'https://www.google.com/maps/place/Ph%E1%BB%9F+H%C3%B2a/@10.7895162,106.6880276,17z/data=!3m1!4b1!4m6!3m5!1s0x1:0x2!8m2!3d10.7895109!4d106.6906025';
 
+export const TEST_PLACE_FEATURE_ID = '0x1:0x2';
+
 export function createTestLog() {
   return { info: vi.fn(), warn: vi.fn(), error: vi.fn(), appendKeys: vi.fn(), removeKeys: vi.fn() } satisfies KeyedLog;
 }
