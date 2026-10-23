@@ -42,6 +42,20 @@ export function extractMapsUrl(text: string): string | null {
 }
 
 /**
+ * The user's own words: `text` without any Maps URL (and the quotes wrapped around it), blank lines dropped,
+ * runs of spaces collapsed. This is the "note" the LLM reads. Uses the same pattern as `extractMapsUrl`.
+ */
+export function stripMapsUrls(text: string): string {
+  const withQuotes = new RegExp(`[“‘«"']?${MAPS_URL_IN_TEXT.source}[”’»"']?`, 'gi');
+  return text
+    .replace(withQuotes, '')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+    .filter((line) => line !== '')
+    .join('\n');
+}
+
+/**
  * Name and coordinates from a resolved `/maps/place/<name>/…` URL (ADR-0016). Prefers the pin
  * (`!3d…!4d…`) over the viewport (`@lat,lng`). Returns null for anything else; never throws.
  */
