@@ -80,6 +80,26 @@ describe('processIngestJob', () => {
     expect(testDeps.logger.warn).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ groupId, reason: 'http_error' }));
   });
 
+  it.each([
+    ['no ward', { kind: 'found', address: null, ward: null, city: 'Thành phố Hồ Chí Minh' }, 'no_ward'],
+    ['no street', { kind: 'found', address: null, ward: 'Phường Tân Định', city: 'Thành phố Hồ Chí Minh' }, 'no_street'],
+  ] as const)('warns once when the geocoder answers with %s', async (_label, result, reason) => {
+    const testDeps = deps({ reverseGeocode: async () => result });
+
+    await processIngestJob(makeJob({ updateId: nextUpdateId++ }), testDeps);
+
+    expect(testDeps.logger.warn).toHaveBeenCalledTimes(1);
+    expect(testDeps.logger.warn).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ groupId, reason }));
+  });
+
+  it('does not warn when the geocoder returns ward and street', async () => {
+    const testDeps = deps();
+
+    await processIngestJob(makeJob({ updateId: nextUpdateId++ }), testDeps);
+
+    expect(testDeps.logger.warn).not.toHaveBeenCalled();
+  });
+
   it('a place outside the old districts gets legacyDistrict null', async () => {
     const job = makeJob({ updateId: nextUpdateId++ });
     const hoGuom = 'https://www.google.com/maps/place/H%E1%BB%93+G%C6%B0%C6%A1m/@21.0287,105.8524,17z';

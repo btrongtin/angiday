@@ -60,8 +60,10 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
   }
 
   const geocoded = await deps.reverseGeocode(parsed.lat, parsed.lng);
-  if (geocoded.kind === 'none') {
-    logger.warn('Reverse geocoding found nothing; saving without address', { groupId, reason: geocoded.reason });
+  const geocodeGap =
+    geocoded.kind === 'none' ? geocoded.reason : geocoded.ward === null ? 'no_ward' : geocoded.address === null ? 'no_street' : null;
+  if (geocodeGap !== null) {
+    logger.warn('Reverse geocoding found nothing or too little; saving with what we have', { groupId, reason: geocodeGap });
   }
   const area: Area = {
     city: geocoded.kind === 'found' ? geocoded.city : null,

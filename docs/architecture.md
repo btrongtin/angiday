@@ -197,7 +197,7 @@ Same chat core as F5; only the adapter differs (no streaming, Telegram formattin
 | LLM returns invalid JSON / schema | Re-prompt with the zod error, max N attempts, then fail |
 | LLM 429 (free-tier RPM limit) | Worker: exponential backoff, SQS redelivery as the outer retry. Chat: short retry, then a friendly "busy, try again" message |
 | Unknown chat sends to bot | Dropped at ingest |
-| Maps URL can't be parsed / has no coordinates | `needs_info`, ask for a better link ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)) |
+| Maps URL can't be parsed / has no coordinates | S1 behaviour until S5: reply "chưa đọc được", save nothing; then `needs_info`, ask for a better link ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)) |
 | Reverse geocoding fails or returns nothing | Save without address/ward/city, log a warning; `legacyDistrict` still comes from polygons |
 | Message fails repeatedly | DLQ + alarm; place marked `failed` |
 

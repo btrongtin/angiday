@@ -61,7 +61,7 @@ export function createReverseGeocoder({ baseUrl, fetchFn = fetch, timeoutMs = 3_
       return { kind: 'none', reason: 'network' };
     }
     if (!response.ok) {
-      await response.body?.cancel();
+      await response.body?.cancel().catch(() => {});
       return { kind: 'none', reason: 'http_error' };
     }
     try {

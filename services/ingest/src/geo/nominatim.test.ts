@@ -110,6 +110,13 @@ describe('createReverseGeocoder', () => {
     expect(await createReverseGeocoder({ baseUrl: 'https://x.test', fetchFn })(10.7, 106.7)).toEqual({ kind: 'none', reason: 'network' });
   });
 
+  it('does not throw when cancelling the body of a failed response rejects', async () => {
+    const body = new ReadableStream({ start: (controller) => controller.error(new Error('conn reset')) });
+    const fetchFn = vi.fn().mockResolvedValue(new Response(body, { status: 503 }));
+
+    expect(await createReverseGeocoder({ baseUrl: 'https://x.test', fetchFn })(10.7, 106.7)).toEqual({ kind: 'none', reason: 'http_error' });
+  });
+
   it('maps a non-JSON body to bad_response', async () => {
     const fetchFn = vi.fn().mockResolvedValue(new Response('<html>', { status: 200 }));
 

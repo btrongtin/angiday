@@ -392,7 +392,7 @@ Mapping rules (fixed against the real fixtures of 2026-10-23). Only the `address
   - `app-env.test.ts`: `loadAppEnv({}, ['NOMINATIM_BASE_URL'])` → default; a custom URL is kept; `'not a url'` throws.
 
 - [x] **Step 2: Run — FAIL** (`pnpm --filter @angiday/ingest test -- nominatim`, `pnpm --filter @angiday/shared test -- app-env`)
-- [x] **Step 3: Implement.** Build the request URL with `new URL('reverse', base.endsWith('/') ? base : base + '/')`; validate the body with a zod schema (`address: record<string, string>`; other fields ignored) or the `{ error: string }` shape. `.env.example`: add a commented `# NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org` under a new "Reverse geocoding (worker)" heading, noting it is optional and not a secret.
+- [x] **Step 3: Implement.** Build the request URL with `new URL('reverse', base.endsWith('/') ? base : base + '/')`; validate the body by hand (`ingest` has no zod dependency; Deviation: not a zod schema). `.env.example`: add a commented `# NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org` under a new "Reverse geocoding (worker)" heading, noting it is optional and not a secret.
 - [x] **Step 4: Run — PASS**
 - [x] **Step 5: Commit** — `feat(ingest): add Nominatim reverse geocoding client` (stage the 6 fixture files too)
 
@@ -423,7 +423,7 @@ Pipeline after a successful parse: `reverseGeocode(lat, lng)` → on `none`, `lo
 - [x] **Step 4: Run — PASS**, then `pnpm check` and `pnpm --filter @angiday/infra cdk synth` (bundles the polygon JSON into the worker; no AWS credentials needed).
 - [x] **Step 5: Commit** — `feat(ingest): enrich saved places with address and area`
 - [x] **Step 6: Deploy (owner session).** Owner runs `aws login --profile angiday`; then `pnpm --filter @angiday/infra cdk diff --profile angiday` (expect: worker code + one env var, nothing else) → `pnpm --filter @angiday/infra cdk deploy --profile angiday`.
-- [x] **Step 7: Demo in Telegram.** Owner posts one of their real links in "Lưu quán". Expected reply: `Đã lưu: TÔ GHẸ - HỦ TIẾU GHẸ Tân Định — Q1 · Phường Tân Định` (the TÔ GHẸ link; the two Q2 links give `Q2 · Phường Bình Trưng` and `Q2 · Phường Cát Lái`). If the reply has only "Q1", read the worker log line `Reverse geocoding found nothing` for the reason (CloudWatch Logs Insights, filter by `updateId`).
+- [x] **Step 7: Demo in Telegram.** Owner posts one of their real links in "Lưu quán". Expected reply: `Đã lưu: TÔ GHẸ - HỦ TIẾU GHẸ Tân Định — Q1 · Phường Tân Định` (the TÔ GHẸ link; the two Q2 links give `Q2 · Phường Bình Trưng` and `Q2 · Phường Cát Lái`). If the reply has only "Q1", read the worker log line `Reverse geocoding found nothing or too little` for the reason (CloudWatch Logs Insights, filter by `updateId`).
 
 ---
 
@@ -445,7 +445,7 @@ Pipeline after a successful parse: `reverseGeocode(lat, lng)` → on `none`, `lo
 **Files:** `docs/progress.md`, `docs/architecture.md`, `docs/plans/phase-1-ingest-and-list.md`, `CLAUDE.md`, `README.md` (attribution line)
 
 - [ ] **Step 1:** `superpowers:verification-before-completion` — `pnpm check` green; Task 6 Step 7 and Task 7 Step 2 demos done (owner confirms).
-- [ ] **Step 2: Docs.**
+- [x] **Step 2: Docs.**
   - `progress.md`: tick S2 (update its one-line description: geoBoundaries instead of GADM polygons); session-log line incl. ADR-0018, the 2 S1 minors fixed (smart quotes, missing `https://`, plus the `goo.gl/maps/` test gap), `needs_info` deferred to S5, Nominatim DNS note; Now/Next → S3.
   - `architecture.md`: Data model → Area paragraph links ADR-0018 and names geoBoundaries; places index list unchanged (the `area.legacyDistrict` index stays "later", S4 adds it with the query).
   - Phase plan S2 bullets: GADM/mapshaper → geoBoundaries (ADR-0018); `needs_info` → S5.
