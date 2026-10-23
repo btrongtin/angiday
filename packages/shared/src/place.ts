@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { areaSchema } from './area/legacy-districts';
 import { objectIdSchema } from './ids';
 
 /** Pipeline state (architecture.md → Data model). */
@@ -26,7 +27,14 @@ export const placeSchema = z.object({
   name: z.string().min(1),
   /** The resolved (long) Google Maps URL. */
   mapsUrl: z.url(),
+  /** Lower-case `0x<hex>:0x<hex>` from the Maps URL; null when the URL has none. */
+  mapsFeatureId: z.string().nullable(),
   location: geoPointSchema,
+  /** Street-level address from reverse geocoding (never another POI's name or house number); null when unknown. */
+  address: z.string().min(1).nullable(),
+  area: areaSchema,
+  /** Accent-free text derived from name, address and area on every write (repository). */
+  searchText: z.string(),
   ingestStatus: ingestStatusSchema,
   visitStatus: visitStatusSchema,
   source: telegramSourceSchema,
@@ -45,5 +53,5 @@ export type IngestStatus = z.infer<typeof ingestStatusSchema>;
 export type VisitStatus = z.infer<typeof visitStatusSchema>;
 export type GeoPoint = z.infer<typeof geoPointSchema>;
 export type Place = z.infer<typeof placeSchema>;
-export type NewTelegramPlace = Pick<Place, 'name' | 'mapsUrl' | 'location' | 'source'>;
+export type NewTelegramPlace = Pick<Place, 'name' | 'mapsUrl' | 'mapsFeatureId' | 'location' | 'address' | 'area' | 'source'>;
 export type Group = z.infer<typeof groupSchema>;

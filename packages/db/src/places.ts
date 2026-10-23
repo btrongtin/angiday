@@ -1,9 +1,13 @@
-import type { NewTelegramPlace, Place } from '@angiday/shared';
+import { buildPlaceSearchText, EMPTY_AREA, type NewTelegramPlace, type Place } from '@angiday/shared';
 import type { Db } from 'mongodb';
 import { type PlaceDoc, placesCollection, toObjectId } from './collections';
 
 function toPlace({ _id, groupId, ...rest }: PlaceDoc): Place {
-  return { ...rest, id: _id.toHexString(), groupId: groupId.toHexString() };
+  const mapsFeatureId = rest.mapsFeatureId ?? null;
+  const address = rest.address ?? null;
+  const area = rest.area ?? EMPTY_AREA;
+  const searchText = rest.searchText ?? buildPlaceSearchText({ name: rest.name, address, area });
+  return { ...rest, mapsFeatureId, address, area, searchText, id: _id.toHexString(), groupId: groupId.toHexString() };
 }
 
 /**
@@ -16,7 +20,17 @@ export async function upsertPlaceFromTelegram(db: Db, groupId: string, input: Ne
   const doc = await placesCollection(db).findOneAndUpdate(
     { groupId: groupObjectId, 'source.telegramUpdateId': input.source.telegramUpdateId },
     {
-      $set: { name: input.name, mapsUrl: input.mapsUrl, location: input.location, ingestStatus: 'saved', updatedAt: now },
+      $set: {
+        name: input.name,
+        mapsUrl: input.mapsUrl,
+        mapsFeatureId: input.mapsFeatureId,
+        location: input.location,
+        address: input.address,
+        area: input.area,
+        searchText: buildPlaceSearchText(input),
+        ingestStatus: 'saved',
+        updatedAt: now,
+      },
       $setOnInsert: { groupId: groupObjectId, visitStatus: 'want_to_try', source: input.source, createdAt: now },
     },
     { upsert: true, returnDocument: 'after' },

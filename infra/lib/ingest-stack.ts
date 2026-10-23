@@ -6,7 +6,7 @@ import { NodejsFunction, type NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { type IStringParameter, StringParameter } from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
-import { SSM_PARAMS, type SsmParamKey, WORKER_TIMEOUT_SECONDS } from './config';
+import { NOMINATIM_BASE_URL, SSM_PARAMS, type SsmParamKey, WORKER_TIMEOUT_SECONDS } from './config';
 
 const REPO_ROOT = path.resolve(__dirname, '../..');
 const INGEST_SRC = path.join(REPO_ROOT, 'services/ingest/src');
@@ -93,6 +93,7 @@ export class IngestStack extends Stack {
       environment: {
         NODE_OPTIONS: '--enable-source-maps',
         POWERTOOLS_SERVICE_NAME: 'ingest-worker',
+        NOMINATIM_BASE_URL,
       },
     });
     useParams(worker, ['MONGODB_URI', 'TELEGRAM_BOT_TOKEN']);

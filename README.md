@@ -43,6 +43,7 @@ Details: [docs/architecture.md](docs/architecture.md). Decisions and trade-offs:
 - **Shared:** zod schemas in a monorepo
 - **LLM:** Gemini via the Vercel AI SDK
 - **Place data:** parsed from the shared Google Maps link; addresses from OpenStreetMap Nominatim
+- **Data attribution:** addresses © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL); pre-2025 HCMC district boundaries from [geoBoundaries](https://www.geoboundaries.org) / OCHA ROAP (CC BY 3.0 IGO)
 
 ## Getting started
 

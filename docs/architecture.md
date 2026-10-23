@@ -74,7 +74,7 @@ A place has **two independent statuses**:
 
 Every place also stores a `searchText` field (normalized, accent-free) so free-text search is accent-insensitive.
 
-Area: `area: { city, ward, legacyDistrict }`. `ward`/`city` come from OpenStreetMap reverse geocoding as-is ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)); `legacyDistrict` (pre-2025 HCMC district) is derived at ingest by point-in-polygon on a static GeoJSON ([ADR-0013](adr/0013-area-legacy-district-from-polygons.md)).
+Area: `area: { city, ward, legacyDistrict }`. `ward`/`city` come from OpenStreetMap reverse geocoding as-is ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)); `legacyDistrict` (pre-2025 HCMC district) is derived at ingest by point-in-polygon on a static GeoJSON ([ADR-0013](adr/0013-area-legacy-district-from-polygons.md)) from geoBoundaries ADM2 ([ADR-0018](adr/0018-district-polygons-from-geoboundaries.md)); `q2`, `q9` and `thu_duc` are separate keys.
 
 ## Flows
 
@@ -197,7 +197,7 @@ Same chat core as F5; only the adapter differs (no streaming, Telegram formattin
 | LLM returns invalid JSON / schema | Re-prompt with the zod error, max N attempts, then fail |
 | LLM 429 (free-tier RPM limit) | Worker: exponential backoff, SQS redelivery as the outer retry. Chat: short retry, then a friendly "busy, try again" message |
 | Unknown chat sends to bot | Dropped at ingest |
-| Maps URL can't be parsed / has no coordinates | `needs_info`, ask for a better link ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)) |
+| Maps URL can't be parsed / has no coordinates | S1 behaviour until S5: reply "chưa đọc được", save nothing; then `needs_info`, ask for a better link ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)) |
 | Reverse geocoding fails or returns nothing | Save without address/ward/city, log a warning; `legacyDistrict` still comes from polygons |
 | Message fails repeatedly | DLQ + alarm; place marked `failed` |
 

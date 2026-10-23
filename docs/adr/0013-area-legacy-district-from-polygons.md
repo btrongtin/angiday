@@ -3,6 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-10-10
 - **Note:** `ward` / `city` now come from OpenStreetMap reverse geocoding instead of Google `addressComponents` ([ADR-0016](0016-place-details-from-url-and-nominatim.md)). The model and polygon approach are unchanged.
+- **Note:** The data source (GADM) and the `q2`/`q9` → `thu_duc` alias line are superseded by [ADR-0018](0018-district-polygons-from-geoboundaries.md).
 
 ## Context
 Since 1 July 2025 Vietnam has no district level (two tiers: province/city and ward/commune), and Ho Chi Minh City merged with Bình Dương and Bà Rịa–Vũng Tàu. Google addresses mix the old and new units. Users still say "Q3", "quận 3", "Thủ Đức", but may also use new ward names.

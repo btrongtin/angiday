@@ -42,6 +42,8 @@ export const appEnvShape = {
   WEB_LOGIN_PASSWORD: z.string().min(12, 'must be at least 12 characters'),
   SESSION_SECRET: z.string().min(32, 'must be at least 32 characters (openssl rand -hex 32)'),
   GROUP_ID: objectIdSchema,
+  /** Not a secret; set by CDK on the worker. Overridable to point at a self-hosted Nominatim (ADR-0016). */
+  NOMINATIM_BASE_URL: z.url().default('https://nominatim.openstreetmap.org'),
 } satisfies z.ZodRawShape;
 
 export type AppEnv = z.infer<z.ZodObject<typeof appEnvShape>>;

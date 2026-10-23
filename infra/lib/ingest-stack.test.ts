@@ -67,6 +67,7 @@ describe('IngestStack', () => {
         Variables: Match.objectLike({
           MONGODB_URI_PARAM: '/angiday/mongodb-uri',
           TELEGRAM_BOT_TOKEN_PARAM: '/angiday/telegram-bot-token',
+          NOMINATIM_BASE_URL: 'https://nominatim.openstreetmap.org',
         }),
       },
     });

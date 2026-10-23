@@ -5,7 +5,9 @@ import {
   markTelegramUpdateDone,
   upsertPlaceFromTelegram,
 } from '@angiday/db';
-import { type IngestJob, parseMapsPlaceUrl } from '@angiday/shared';
+import { type Area, formatAreaLabel, type IngestJob, parseMapsPlaceUrl } from '@angiday/shared';
+import { findLegacyDistrict } from '@angiday/shared/legacy-district';
+import type { ReverseGeocode } from '../geo/nominatim';
 import type { Log } from '../lib/log';
 import type { TelegramApi } from '../telegram/api';
 
@@ -15,15 +17,18 @@ export interface ProcessIngestJobDeps {
   db: Db;
   telegram: Pick<TelegramApi, 'sendMessage'>;
   resolveMapsLink: (url: string) => Promise<string | null>;
+  reverseGeocode: ReverseGeocode;
   logger: Log;
 }
 
-export const replySaved = (name: string) => `Đã lưu: ${name}`;
+export const replySaved = (name: string, areaLabel: string | null) =>
+  areaLabel === null ? `Đã lưu: ${name}` : `Đã lưu: ${name} — ${areaLabel}`;
 export const REPLY_UNREADABLE_LINK =
   'Mình chưa đọc được link Google Maps này. Bạn thử bấm "Chia sẻ" trong app Google Maps rồi gửi lại link nhé.';
 
 /**
- * F1 for S1: resolve the link, parse name + coordinates, save, reply. Safe to run twice for the same
+ * F1 for S2: resolve the link, parse name + coordinates + feature id, reverse-geocode (never fails the job), find the
+ * legacy district, save, reply. Safe to run twice for the same
  * update: `telegram_updates` skips finished updates and the place upsert is keyed by the update id.
  * Throws on transient errors (network, Telegram, Mongo) so SQS retries; returns for outcomes a retry can't change.
  */
@@ -54,10 +59,25 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
     return 'unparsed';
   }
 
+  const geocoded = await deps.reverseGeocode(parsed.lat, parsed.lng);
+  const geocodeGap =
+    geocoded.kind === 'none' ? geocoded.reason : geocoded.ward === null ? 'no_ward' : geocoded.address === null ? 'no_street' : null;
+  if (geocodeGap !== null) {
+    logger.warn('Reverse geocoding found nothing or too little; saving with what we have', { groupId, reason: geocodeGap });
+  }
+  const area: Area = {
+    city: geocoded.kind === 'found' ? geocoded.city : null,
+    ward: geocoded.kind === 'found' ? geocoded.ward : null,
+    legacyDistrict: findLegacyDistrict(parsed.lat, parsed.lng),
+  };
+
   const place = await upsertPlaceFromTelegram(db, groupId, {
     name: parsed.name,
     mapsUrl: resolvedUrl,
+    mapsFeatureId: parsed.featureId,
     location: { type: 'Point', coordinates: [parsed.lng, parsed.lat] },
+    address: geocoded.kind === 'found' ? geocoded.address : null,
+    area,
     source: {
       telegramChatId: job.chatId,
       telegramMessageId: job.messageId,
@@ -65,7 +85,7 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
       telegramUserId: job.userId,
     },
   });
-  await reply(replySaved(place.name));
+  await reply(replySaved(place.name, formatAreaLabel(place.area)));
   await markTelegramUpdateDone(db, groupId, job.updateId);
   logger.info('Place saved', { groupId, placeId: place.id });
   return 'saved';
