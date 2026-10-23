@@ -35,6 +35,7 @@ export {
   groupSchema,
   ingestStatusSchema,
   placeSchema,
+  tagSchema,
   telegramSourceSchema,
   visitStatusSchema,
   type GeoPoint,
@@ -42,6 +43,7 @@ export {
   type IngestStatus,
   type NewTelegramPlace,
   type Place,
+  type Tag,
   type VisitStatus,
 } from './place';
 export {

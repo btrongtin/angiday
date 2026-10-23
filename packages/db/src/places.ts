@@ -2,12 +2,26 @@ import { buildPlaceSearchText, EMPTY_AREA, type NewTelegramPlace, type Place } f
 import type { Db } from 'mongodb';
 import { type PlaceDoc, placesCollection, toObjectId } from './collections';
 
-function toPlace({ _id, groupId, ...rest }: PlaceDoc): Place {
+function toPlace({ _id, groupId, tagIds, ...rest }: PlaceDoc): Place {
   const mapsFeatureId = rest.mapsFeatureId ?? null;
   const address = rest.address ?? null;
   const area = rest.area ?? EMPTY_AREA;
-  const searchText = rest.searchText ?? buildPlaceSearchText({ name: rest.name, address, area });
-  return { ...rest, mapsFeatureId, address, area, searchText, id: _id.toHexString(), groupId: groupId.toHexString() };
+  const highlights = rest.highlights ?? [];
+  const searchText = rest.searchText ?? buildPlaceSearchText({ name: rest.name, address, area, highlights });
+  return {
+    ...rest,
+    mapsFeatureId,
+    address,
+    area,
+    cuisine: rest.cuisine ?? [],
+    dishType: rest.dishType ?? [],
+    priceRange: rest.priceRange ?? null,
+    highlights,
+    tagIds: (tagIds ?? []).map((id) => id.toHexString()),
+    searchText,
+    id: _id.toHexString(),
+    groupId: groupId.toHexString(),
+  };
 }
 
 /**
@@ -27,6 +41,11 @@ export async function upsertPlaceFromTelegram(db: Db, groupId: string, input: Ne
         location: input.location,
         address: input.address,
         area: input.area,
+        cuisine: input.cuisine,
+        dishType: input.dishType,
+        priceRange: input.priceRange,
+        highlights: input.highlights,
+        tagIds: input.tagIds.map(toObjectId),
         searchText: buildPlaceSearchText(input),
         ingestStatus: 'saved',
         updatedAt: now,
@@ -47,4 +66,10 @@ export async function listPlaces(db: Db, groupId: string, options: { limit?: num
     .limit(options.limit ?? 100)
     .toArray();
   return docs.map(toPlace);
+}
+
+/** The place a Telegram update produced, if any (a retried SQS message finds its earlier result here). */
+export async function findPlaceByTelegramUpdate(db: Db, groupId: string, updateId: number): Promise<Place | null> {
+  const doc = await placesCollection(db).findOne({ groupId: toObjectId(groupId), 'source.telegramUpdateId': updateId });
+  return doc ? toPlace(doc) : null;
 }

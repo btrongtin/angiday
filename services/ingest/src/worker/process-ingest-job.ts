@@ -78,6 +78,12 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
     location: { type: 'Point', coordinates: [parsed.lng, parsed.lat] },
     address: geocoded.kind === 'found' ? geocoded.address : null,
     area,
+    // Stop-gap until Task 6 wires the LLM extraction.
+    cuisine: [],
+    dishType: [],
+    priceRange: null,
+    highlights: [],
+    tagIds: [],
     source: {
       telegramChatId: job.chatId,
       telegramMessageId: job.messageId,

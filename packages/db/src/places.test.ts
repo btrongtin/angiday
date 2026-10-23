@@ -2,7 +2,7 @@ import { EMPTY_AREA, normalizeForSearch, type NewTelegramPlace } from '@angiday/
 import { type Db, ObjectId } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { placesCollection } from './collections';
-import { listPlaces, upsertPlaceFromTelegram } from './places';
+import { findPlaceByTelegramUpdate, listPlaces, upsertPlaceFromTelegram } from './places';
 import { startMemoryMongo } from './testing/memory-mongo';
 
 let db: Db;
@@ -21,6 +21,11 @@ function newPlace(updateId: number, name = `Quán ${updateId}`): NewTelegramPlac
     location: { type: 'Point', coordinates: [106.7, 10.7] },
     address: null,
     area: EMPTY_AREA,
+    cuisine: [],
+    dishType: [],
+    priceRange: null,
+    highlights: [],
+    tagIds: [],
     source: { telegramChatId: -1001, telegramMessageId: updateId, telegramUpdateId: updateId, telegramUserId: 111 },
   };
 }
@@ -57,6 +62,28 @@ describe('upsertPlaceFromTelegram', () => {
     expect(place.searchText).toContain('quan 1');
   });
 
+  it('stores classification, highlights and tag ids, and puts highlights in searchText', async () => {
+    const tagId = new ObjectId().toHexString();
+
+    const place = await upsertPlaceFromTelegram(db, groupA, {
+      ...newPlace(5, 'Quán Bún'),
+      cuisine: ['vietnamese'],
+      dishType: ['noodle_soup'],
+      priceRange: 'under_50k',
+      highlights: ['bún bò'],
+      tagIds: [tagId],
+    });
+
+    expect(place).toMatchObject({
+      cuisine: ['vietnamese'],
+      dishType: ['noodle_soup'],
+      priceRange: 'under_50k',
+      highlights: ['bún bò'],
+      tagIds: [tagId],
+    });
+    expect(place.searchText).toContain('bun bo');
+  });
+
   it('rejects a malformed groupId', async () => {
     await expect(upsertPlaceFromTelegram(db, 'not-an-id', newPlace(3))).rejects.toThrow(/ObjectId/);
   });
@@ -72,6 +99,7 @@ describe('listPlaces', () => {
       ...newPlace(13),
       _id: new ObjectId(),
       groupId: new ObjectId(groupB),
+      tagIds: [],
       ingestStatus: 'needs_info',
       visitStatus: 'want_to_try',
       createdAt: new Date(),
@@ -109,7 +137,42 @@ describe('listPlaces', () => {
     });
   });
 
+  it('reads a place saved before S3 (no classification fields)', async () => {
+    const groupD = new ObjectId();
+    const { name, mapsUrl, location, source } = newPlace(21, 'Phở S2');
+    await placesCollection(db).insertOne({
+      name,
+      mapsUrl,
+      location,
+      source,
+      mapsFeatureId: null,
+      address: null,
+      area: EMPTY_AREA,
+      searchText: 'pho s2',
+      _id: new ObjectId(),
+      groupId: groupD,
+      ingestStatus: 'saved',
+      visitStatus: 'want_to_try',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const [place] = await listPlaces(db, groupD.toHexString());
+
+    expect(place).toMatchObject({ cuisine: [], dishType: [], priceRange: null, highlights: [], tagIds: [] });
+  });
+
   it('applies the limit', async () => {
     expect(await listPlaces(db, groupB, { limit: 1 })).toHaveLength(1);
+  });
+});
+
+describe('findPlaceByTelegramUpdate', () => {
+  it('finds a place by (groupId, update id) and never across groups', async () => {
+    const saved = await upsertPlaceFromTelegram(db, groupA, newPlace(30));
+
+    expect((await findPlaceByTelegramUpdate(db, groupA, 30))?.id).toBe(saved.id);
+    expect(await findPlaceByTelegramUpdate(db, groupB, 30)).toBeNull();
+    expect(await findPlaceByTelegramUpdate(db, groupA, 31)).toBeNull();
   });
 });

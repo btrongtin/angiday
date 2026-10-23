@@ -1,6 +1,6 @@
-import type { Db } from 'mongodb';
+import { type Db, ObjectId } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { groupsCollection } from './collections';
+import { groupsCollection, tagsCollection } from './collections';
 import { ensureIndexes } from './indexes';
 import { startMemoryMongo } from './testing/memory-mongo';
 
@@ -19,5 +19,12 @@ describe('ensureIndexes', () => {
     await groupsCollection(db).insertOne({ ...doc } as never);
 
     await expect(groupsCollection(db).insertOne({ ...doc } as never)).rejects.toThrow(/E11000/);
+  });
+
+  it('enforces one tag per (group, normalized name)', async () => {
+    const doc = { _id: new ObjectId(), groupId: new ObjectId(), name: 'Hẹn hò', normalized: 'hen ho', createdAt: new Date() };
+    await tagsCollection(db).insertOne({ ...doc });
+
+    await expect(tagsCollection(db).insertOne({ ...doc, _id: new ObjectId(), name: 'hen ho' })).rejects.toThrow(/E11000/);
   });
 });
