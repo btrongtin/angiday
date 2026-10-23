@@ -76,6 +76,20 @@ describe('loadAppEnv', () => {
   });
 });
 
+describe('GEMINI_EXTRACT_MODEL', () => {
+  it('is optional', () => {
+    expect(loadAppEnv({}, ['GEMINI_EXTRACT_MODEL']).GEMINI_EXTRACT_MODEL).toBeUndefined();
+  });
+
+  it('keeps a model id', () => {
+    expect(loadAppEnv({ GEMINI_EXTRACT_MODEL: 'gemini-x' }, ['GEMINI_EXTRACT_MODEL']).GEMINI_EXTRACT_MODEL).toBe('gemini-x');
+  });
+
+  it('rejects an empty value', () => {
+    expect(() => loadAppEnv({ GEMINI_EXTRACT_MODEL: '' }, ['GEMINI_EXTRACT_MODEL'])).toThrow(/GEMINI_EXTRACT_MODEL/);
+  });
+});
+
 describe('NOMINATIM_BASE_URL', () => {
   it('defaults to the public Nominatim instance', () => {
     expect(loadAppEnv({}, ['NOMINATIM_BASE_URL']).NOMINATIM_BASE_URL).toBe('https://nominatim.openstreetmap.org');

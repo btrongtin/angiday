@@ -13,7 +13,7 @@ export interface AiConfig {
   extractModelId?: string | undefined;
 }
 
-export function getModel(purpose: 'extract', config: AiConfig): LanguageModel {
+export function getModel(purpose: 'extract', config: AiConfig): Exclude<LanguageModel, string> {
   const google = createGoogle({ apiKey: config.apiKey });
   return google(config.extractModelId ?? DEFAULT_MODEL_IDS[purpose]);
 }

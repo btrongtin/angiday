@@ -11,7 +11,8 @@
     "test": "turbo run test",
     "check": "turbo run lint typecheck test",
     "seed:group": "pnpm --filter @angiday/ingest run seed:group",
-    "set-webhook": "pnpm --filter @angiday/ingest run set-webhook"
+    "set-webhook": "pnpm --filter @angiday/ingest run set-webhook",
+    "eval:extract": "pnpm --filter @angiday/ai run eval:extract"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

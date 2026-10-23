@@ -1,0 +1,16 @@
+[
+  {
+    "id": "placeholder-bun-bo",
+    "text": "THAY BẰNG TIN NHẮN THẬT: bún bò cay, rẻ, hợp hẹn hò https://maps.app.goo.gl/AbC123xyz",
+    "place": { "name": "Bún Bò Huế Thiện Tâm", "address": null, "areaLabel": "Q2 · Phường Cát Lái" },
+    "existingTags": ["đi nhậu"],
+    "expect": { "cuisine": ["vietnamese"], "dishType": ["noodle_soup"], "priceRange": "under_50k", "tags": ["hẹn hò"] }
+  },
+  {
+    "id": "placeholder-link-only",
+    "text": "THAY BẰNG TIN NHẮN THẬT: chỉ có link https://maps.app.goo.gl/AbC123xyz",
+    "place": { "name": "TÔ GHẸ - HỦ TIẾU GHẸ Tân Định", "address": null, "areaLabel": "Q1 · Phường Tân Định" },
+    "existingTags": [],
+    "expect": { "priceRange": null, "tags": [] }
+  }
+]
