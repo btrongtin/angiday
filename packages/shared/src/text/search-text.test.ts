@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeForSearch } from './search-text';
+import { EMPTY_AREA } from '../area/legacy-districts';
+import { buildPlaceSearchText, normalizeForSearch } from './search-text';
 
 describe('normalizeForSearch', () => {
   it.each([
@@ -12,5 +13,21 @@ describe('normalizeForSearch', () => {
     ['', ''],
   ])('%j → %j', (input, expected) => {
     expect(normalizeForSearch(input)).toBe(expected);
+  });
+});
+
+describe('buildPlaceSearchText', () => {
+  it('joins name, address, ward, city and the district full name, accent-free', () => {
+    expect(
+      buildPlaceSearchText({
+        name: 'Bún bò Huế O Phượng',
+        address: 'Đường Nguyễn Đình Chiểu, Phường Xuân Hòa',
+        area: { legacyDistrict: 'q3', ward: 'Phường Xuân Hòa', city: 'Thành phố Hồ Chí Minh' },
+      }),
+    ).toBe('bun bo hue o phuong duong nguyen dinh chieu phuong xuan hoa phuong xuan hoa thanh pho ho chi minh quan 3');
+  });
+
+  it('skips missing parts', () => {
+    expect(buildPlaceSearchText({ name: 'Bún bò Huế O Phượng', address: null, area: EMPTY_AREA })).toBe('bun bo hue o phuong');
   });
 });

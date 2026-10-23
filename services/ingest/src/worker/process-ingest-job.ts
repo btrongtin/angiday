@@ -5,7 +5,7 @@ import {
   markTelegramUpdateDone,
   upsertPlaceFromTelegram,
 } from '@angiday/db';
-import { type IngestJob, parseMapsPlaceUrl } from '@angiday/shared';
+import { EMPTY_AREA, type IngestJob, parseMapsPlaceUrl } from '@angiday/shared';
 import type { Log } from '../lib/log';
 import type { TelegramApi } from '../telegram/api';
 
@@ -57,7 +57,11 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
   const place = await upsertPlaceFromTelegram(db, groupId, {
     name: parsed.name,
     mapsUrl: resolvedUrl,
+    mapsFeatureId: parsed.featureId,
     location: { type: 'Point', coordinates: [parsed.lng, parsed.lat] },
+    // Stop-gap until Task 6 adds reverse geocoding and the district lookup.
+    address: null,
+    area: EMPTY_AREA,
     source: {
       telegramChatId: job.chatId,
       telegramMessageId: job.messageId,

@@ -1,4 +1,4 @@
-import type { NewTelegramPlace } from '@angiday/shared';
+import { EMPTY_AREA, normalizeForSearch, type NewTelegramPlace } from '@angiday/shared';
 import { type Db, ObjectId } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { placesCollection } from './collections';
@@ -17,7 +17,10 @@ function newPlace(updateId: number, name = `Quán ${updateId}`): NewTelegramPlac
   return {
     name,
     mapsUrl: `https://www.google.com/maps/place/Q${updateId}/@10.7,106.7,17z`,
+    mapsFeatureId: '0x1:0x2',
     location: { type: 'Point', coordinates: [106.7, 10.7] },
+    address: null,
+    area: EMPTY_AREA,
     source: { telegramChatId: -1001, telegramMessageId: updateId, telegramUpdateId: updateId, telegramUserId: 111 },
   };
 }
@@ -37,6 +40,21 @@ describe('upsertPlaceFromTelegram', () => {
 
     expect(second.id).toBe(first.id);
     expect(await placesCollection(db).countDocuments({ 'source.telegramUpdateId': 2 })).toBe(1);
+  });
+
+  it('stores feature id, address, area and a derived searchText', async () => {
+    const area = { legacyDistrict: 'q1', ward: 'Phường Tân Định', city: 'Thành phố Hồ Chí Minh' } as const;
+
+    const place = await upsertPlaceFromTelegram(db, groupA, {
+      ...newPlace(4, 'Phở Hòa'),
+      address: '12 Trần Quang Khải, Phường Tân Định',
+      area,
+    });
+
+    expect(place).toMatchObject({ mapsFeatureId: '0x1:0x2', address: '12 Trần Quang Khải, Phường Tân Định', area });
+    expect(place.searchText).toContain('pho hoa');
+    expect(place.searchText).toContain('phuong tan dinh');
+    expect(place.searchText).toContain('quan 1');
   });
 
   it('rejects a malformed groupId', async () => {
@@ -63,6 +81,32 @@ describe('listPlaces', () => {
     const places = await listPlaces(db, groupB);
 
     expect(places.map((p) => p.id)).toEqual([newer.id, older.id]);
+  });
+
+  it('reads a place saved before S2 (no address/area fields)', async () => {
+    const groupC = new ObjectId();
+    const { name, mapsUrl, location, source } = newPlace(20, 'Phở Cũ');
+    await placesCollection(db).insertOne({
+      name,
+      mapsUrl,
+      location,
+      source,
+      _id: new ObjectId(),
+      groupId: groupC,
+      ingestStatus: 'saved',
+      visitStatus: 'want_to_try',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const [place] = await listPlaces(db, groupC.toHexString());
+
+    expect(place).toMatchObject({
+      mapsFeatureId: null,
+      address: null,
+      area: EMPTY_AREA,
+      searchText: normalizeForSearch('Phở Cũ'),
+    });
   });
 
   it('applies the limit', async () => {
