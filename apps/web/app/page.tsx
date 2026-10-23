@@ -1,5 +1,5 @@
-import { getDb, listPlaces } from '@angiday/db';
-import { formatAreaLabel } from '@angiday/shared';
+import { getDb, listPlaces, listTags } from '@angiday/db';
+import { formatAreaLabel, formatClassificationLine } from '@angiday/shared';
 import { getWebEnv } from '@/lib/env';
 import { requireSession } from '@/lib/session';
 import { logout } from './login/actions';
@@ -7,7 +7,9 @@ import { logout } from './login/actions';
 export default async function HomePage() {
   await requireSession();
   const env = getWebEnv();
-  const places = await listPlaces(await getDb(env.MONGODB_URI), env.GROUP_ID);
+  const db = await getDb(env.MONGODB_URI);
+  const [places, tags] = await Promise.all([listPlaces(db, env.GROUP_ID), listTags(db, env.GROUP_ID)]);
+  const tagNames = new Map(tags.map((tag) => [tag.id, tag.name]));
 
   return (
     <main>
@@ -19,6 +21,9 @@ export default async function HomePage() {
           <ul>
             {places.map((place) => {
               const areaLabel = formatAreaLabel(place.area);
+              const classification = formatClassificationLine(place);
+              // Ids of deleted tags no longer resolve; they are skipped (ADR-0006).
+              const placeTags = place.tagIds.flatMap((id) => tagNames.get(id) ?? []);
               return (
                 <li key={place.id}>
                   <a href={place.mapsUrl} target="_blank" rel="noreferrer">
@@ -26,6 +31,9 @@ export default async function HomePage() {
                   </a>
                   {areaLabel !== null && <div>{areaLabel}</div>}
                   {place.address !== null && <div>{place.address}</div>}
+                  {classification !== null && <div>{classification}</div>}
+                  {place.highlights.length > 0 && <div>Món nổi bật: {place.highlights.join(', ')}</div>}
+                  {placeTags.length > 0 && <div>Tag: {placeTags.join(', ')}</div>}
                 </li>
               );
             })}
