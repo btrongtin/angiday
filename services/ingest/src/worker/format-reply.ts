@@ -21,3 +21,11 @@ export function formatSavedReply(
     .filter((line) => line !== null)
     .join('\n');
 }
+
+/** The bot's answer when the shared place is already in the group's list (ADR-0019). */
+export function formatAlreadySavedReply(place: Pick<Place, 'name' | 'area'>): string {
+  const areaLabel = formatAreaLabel(place.area);
+  return areaLabel === null
+    ? `Quán này đã được lưu trước đó: ${place.name}`
+    : `Quán này đã được lưu trước đó: ${place.name} — ${areaLabel}`;
+}

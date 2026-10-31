@@ -3,6 +3,7 @@ import {
   claimTelegramUpdate,
   type Db,
   ensureTags,
+  findDuplicatePlace,
   findGroupByTelegramChatId,
   findPlaceByTelegramUpdate,
   listTags,
@@ -14,9 +15,9 @@ import { findLegacyDistrict } from '@angiday/shared/legacy-district';
 import type { ReverseGeocode } from '../geo/nominatim';
 import type { Log } from '../lib/log';
 import type { TelegramApi } from '../telegram/api';
-import { formatSavedReply } from './format-reply';
+import { formatAlreadySavedReply, formatSavedReply } from './format-reply';
 
-export type ProcessOutcome = 'saved' | 'unparsed' | 'duplicate' | 'unknown_group';
+export type ProcessOutcome = 'saved' | 'already_saved' | 'unparsed' | 'duplicate' | 'unknown_group';
 
 export interface ProcessIngestJobDeps {
   db: Db;
@@ -73,6 +74,20 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
     await reply(REPLY_UNREADABLE_LINK);
     await markTelegramUpdateDone(db, groupId, job.updateId);
     return 'unparsed';
+  }
+
+  // The same restaurant shared again (ADR-0019): say so, and skip geocoding and the LLM.
+  const repeated = await findDuplicatePlace(db, groupId, {
+    mapsFeatureId: parsed.featureId,
+    name: parsed.name,
+    lat: parsed.lat,
+    lng: parsed.lng,
+  });
+  if (repeated) {
+    logger.info('Place already saved; not saving again', { groupId, placeId: repeated.id });
+    await reply(formatAlreadySavedReply(repeated));
+    await markTelegramUpdateDone(db, groupId, job.updateId);
+    return 'already_saved';
   }
 
   const geocoded = await deps.reverseGeocode(parsed.lat, parsed.lng);

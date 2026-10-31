@@ -1,4 +1,12 @@
-import { type Area, buildPlaceSearchText, EMPTY_AREA, type LegacyDistrict, type NewTelegramPlace, type Place } from '@angiday/shared';
+import {
+  type Area,
+  buildPlaceSearchText,
+  EMPTY_AREA,
+  type LegacyDistrict,
+  type NewTelegramPlace,
+  normalizeForSearch,
+  type Place,
+} from '@angiday/shared';
 import type { Db } from 'mongodb';
 import { type PlaceDoc, placesCollection, toObjectId } from './collections';
 
@@ -120,4 +128,36 @@ export async function backfillPlaceDefaults(
     if (!options.dryRun) await collection.updateOne({ _id: doc._id }, { $set: set });
   }
   return { scanned, updated };
+}
+
+/** Two saved places with the same name closer than this are one place (ADR-0019). */
+export const DUPLICATE_RADIUS_METERS = 50;
+const EARTH_RADIUS_METERS = 6_378_100;
+
+/**
+ * A saved place of the group that `candidate` repeats (ADR-0019): the same Maps feature id, else the same name
+ * (ignoring case and accents) within `DUPLICATE_RADIUS_METERS`. Only `saved` places count.
+ */
+export async function findDuplicatePlace(
+  db: Db,
+  groupId: string,
+  candidate: { mapsFeatureId: string | null; name: string; lat: number; lng: number },
+): Promise<Place | null> {
+  const collection = placesCollection(db);
+  const base = { groupId: toObjectId(groupId), ingestStatus: 'saved' as const };
+
+  if (candidate.mapsFeatureId !== null) {
+    const byFeatureId = await collection.findOne({ ...base, mapsFeatureId: candidate.mapsFeatureId });
+    if (byFeatureId) return toPlace(byFeatureId);
+  }
+
+  const nearby = await collection
+    .find({
+      ...base,
+      location: { $geoWithin: { $centerSphere: [[candidate.lng, candidate.lat], DUPLICATE_RADIUS_METERS / EARTH_RADIUS_METERS] } },
+    })
+    .toArray();
+  const wanted = normalizeForSearch(candidate.name);
+  const sameName = nearby.find((doc) => normalizeForSearch(doc.name) === wanted);
+  return sameName ? toPlace(sameName) : null;
 }

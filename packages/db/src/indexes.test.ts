@@ -1,6 +1,6 @@
 import { type Db, ObjectId } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { groupsCollection, tagsCollection } from './collections';
+import { groupsCollection, placesCollection, tagsCollection } from './collections';
 import { ensureIndexes } from './indexes';
 import { startMemoryMongo } from './testing/memory-mongo';
 
@@ -26,5 +26,14 @@ describe('ensureIndexes', () => {
     await tagsCollection(db).insertOne({ ...doc });
 
     await expect(tagsCollection(db).insertOne({ ...doc, _id: new ObjectId(), name: 'hen ho' })).rejects.toThrow(/E11000/);
+  });
+});
+
+describe('places indexes', () => {
+  it('has a non-unique index on (groupId, mapsFeatureId)', async () => {
+    const index = (await placesCollection(db).indexes()).find((i) => i.name === 'groupId_mapsFeatureId');
+
+    expect(index?.key).toEqual({ groupId: 1, mapsFeatureId: 1 });
+    expect(index?.unique).toBeUndefined();
   });
 });

@@ -18,7 +18,9 @@ afterAll(() => stop());
 
 let nextUpdateId = 1;
 let sendMessage: ReturnType<typeof vi.fn<(input: SendMessageInput) => Promise<{ messageId: number }>>>;
-beforeEach(() => {
+beforeEach(async () => {
+  // Every test shares one Maps link; start each with no places so the already-saved check does not leak between them.
+  await db.collection('places').deleteMany({});
   sendMessage = vi.fn<(input: SendMessageInput) => Promise<{ messageId: number }>>().mockResolvedValue({ messageId: 999 });
 });
 
@@ -285,5 +287,29 @@ describe('processIngestJob notes without the user own words', () => {
 
     const saved = await places().findOne({ 'source.telegramUpdateId': job.updateId });
     expect(saved).toMatchObject({ priceRange: null, tagIds: [] });
+  });
+});
+
+describe('processIngestJob already-saved places', () => {
+  it('replies that the place was saved before, and neither geocodes, calls the LLM nor saves again', async () => {
+    await processIngestJob(makeJob({ updateId: nextUpdateId++, text: NOTE_TEXT }), deps());
+    sendMessage.mockClear();
+    const job = makeJob({ updateId: nextUpdateId++, messageId: 43, threadId: 77, text: NOTE_TEXT });
+    const reverseGeocode = vi.fn<ReverseGeocode>();
+    const extract = vi.fn<Extract>();
+
+    const outcome = await processIngestJob(job, deps({ reverseGeocode, extractPlaceDetails: extract }));
+
+    expect(outcome).toBe('already_saved');
+    expect(await places().countDocuments({ mapsFeatureId: TEST_PLACE_FEATURE_ID })).toBe(1);
+    expect(reverseGeocode).not.toHaveBeenCalled();
+    expect(extract).not.toHaveBeenCalled();
+    expect(sendMessage).toHaveBeenCalledWith({
+      chatId: TEST_CHAT_ID,
+      text: 'Quán này đã được lưu trước đó: Phở Hòa — Q1 · Phường Tân Định',
+      replyToMessageId: 43,
+      threadId: 77,
+    });
+    expect(await processIngestJob(job, deps())).toBe('duplicate');
   });
 });

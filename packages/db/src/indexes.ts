@@ -9,6 +9,8 @@ export async function ensureIndexes(db: Db): Promise<void> {
   await groupsCollection(db).createIndex({ telegramChatId: 1 }, { name: 'telegramChatId_unique', unique: true });
   await placesCollection(db).createIndexes([
     { key: { groupId: 1, createdAt: -1 }, name: 'groupId_createdAt' },
+    // Not unique: places saved before duplicate detection (ADR-0019) may already share a feature id.
+    { key: { groupId: 1, mapsFeatureId: 1 }, name: 'groupId_mapsFeatureId' },
     {
       key: { groupId: 1, 'source.telegramUpdateId': 1 },
       name: 'groupId_telegramUpdateId_unique',
