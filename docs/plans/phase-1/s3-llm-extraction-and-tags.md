@@ -373,6 +373,24 @@ Pipeline (after claim):
 
 ---
 
+### Task 10: Already-saved places (added 2026-10-31, owner request; run before Task 9)
+
+**Why:** the Task 6 demo showed the same link sent twice would be saved twice ([ADR-0019](../../adr/0019-duplicate-places-by-feature-id-then-name-and-distance.md)). Review Focus addition: a link to a place that is already saved must neither create a place nor call Nominatim or Gemini.
+
+**Files:** Modify `packages/db/src/places.ts` (+test), `indexes.ts` (+test), `index.ts`; `services/ingest/src/worker/format-reply.ts` (+test), `process-ingest-job.ts` (+test).
+
+**Interfaces:**
+- Produces (db): `findDuplicatePlace(db: Db, groupId: string, candidate: { mapsFeatureId: string | null; name: string; lat: number; lng: number }): Promise<Place | null>` — saved places of the group only; feature id first; then equal `normalizeForSearch(name)` within `DUPLICATE_RADIUS_METERS = 50` (`$geoWithin` / `$centerSphere`, radius ÷ 6378100). Index `{ groupId: 1, mapsFeatureId: 1 }` named `groupId_mapsFeatureId` (not unique).
+- Produces (ingest): `formatAlreadySavedReply(place: Pick<Place, 'name' | 'area'>): string` → `Quán này đã được lưu trước đó: <name>` + `' — ' + areaLabel` when there is one; `ProcessOutcome` gains `'already_saved'`.
+- Pipeline: after the link is parsed and before reverse geocoding, `findDuplicatePlace`; if found → reply `formatAlreadySavedReply`, `markTelegramUpdateDone`, return `'already_saved'` (no geocode, no LLM, no save).
+
+- [ ] **Step 1: failing tests** — db: by feature id (different name and place); not across groups; ignores `needs_info`; name + distance (case/accent-insensitive, ~20 m) finds it; same name 500 m away → null; other name at the same spot → null; no match → null; index exists. Worker: second job (new update id, same link) → `'already_saved'`, one place, reply starts with `Quán này đã được lưu trước đó: Phở Hòa`, `reverseGeocode` and `extractPlaceDetails` not called; a retry of the *first* update still replies from the database (unchanged). The worker test file starts clearing `places` before each test (all tests share one Maps link).
+- [ ] **Step 2: run — FAIL**, **Step 3: implement**, **Step 4: run — PASS and `pnpm check`**
+- [ ] **Step 5: commit** — `feat: reply that a place is already saved instead of saving it twice`
+- [ ] **Step 6 (owner, after deploy):** send the same link twice → the second time the bot answers with "Quán này đã được lưu trước đó: …" and the place list still shows one card.
+
+---
+
 ### Task 9: Verify and finish the slice
 
 **Files:** `docs/progress.md`, `docs/architecture.md`, `docs/plans/phase-1-ingest-and-list.md`, `CLAUDE.md`, `.env.example`

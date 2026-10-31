@@ -24,6 +24,7 @@ One file per decision. An accepted ADR's decision is never edited. To change cou
 | [0016](0016-place-details-from-url-and-nominatim.md) | Place details from the Maps URL + OpenStreetMap reverse geocoding | Accepted |
 | [0017](0017-inject-fetch-for-http-tests.md) | Inject `fetch` for HTTP tests instead of MSW | Accepted |
 | [0018](0018-district-polygons-from-geoboundaries.md) | District polygons from geoBoundaries instead of GADM | Accepted |
+| [0019](0019-duplicate-places-by-feature-id-then-name-and-distance.md) | Detect an already-saved place by feature id, then by name and distance | Accepted |
 
 ## Template
 
