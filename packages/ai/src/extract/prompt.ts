@@ -34,7 +34,7 @@ ${list(PRICE_RANGE_KEYS, PRICE_RANGE_LABELS)}
 
 highlights (array of at most ${MAX_HIGHLIGHTS}): standout dishes or features, taken only from the note or the place name ("bún bò cay"). Specific dishes belong here, never in cuisine or dishType. Do not invent anything.
 
-tags (array of at most ${MAX_TAGS_PER_PLACE}): short labels for the occasion or mood the user wrote ("hợp hẹn hò", "đi nhậu"). Reuse an existing tag name exactly when it fits. Propose a new tag only for a phrase the user actually wrote. Never use a dish name or a cuisine as a tag. With no such phrase in the note, return [].
+tags (array of at most ${MAX_TAGS_PER_PLACE}): short labels for the occasion or mood the user wrote. Keep each tag a short noun phrase of one to three words and drop filler such as "hợp", "để", "rất" ("hợp hẹn hò" → "hẹn hò", "ăn sáng ngon" → "ăn sáng", "đi nhậu"). Reuse an existing tag name exactly when it fits. Propose a new tag only for a phrase the user actually wrote. Never use a dish name or a cuisine as a tag. With no such phrase in the note, return [].
 
 Never guess values the note and the place name do not support.`;
 
