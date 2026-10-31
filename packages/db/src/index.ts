@@ -3,8 +3,6 @@ export { getDb, getMongoClient } from './client';
 export { findGroupByTelegramChatId, upsertGroupByTelegramChatId } from './groups';
 export { ensureIndexes, TELEGRAM_UPDATE_TTL_SECONDS } from './indexes';
 export {
-  type BackfillOptions,
-  backfillPlaceDefaults,
   DUPLICATE_RADIUS_METERS,
   findDuplicatePlace,
   findPlaceByTelegramUpdate, listPlaces,

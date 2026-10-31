@@ -2,7 +2,7 @@ import { EMPTY_AREA, normalizeForSearch, type NewTelegramPlace } from '@angiday/
 import { type Db, ObjectId } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { placesCollection } from './collections';
-import { backfillPlaceDefaults, findDuplicatePlace, findPlaceByTelegramUpdate, listPlaces, upsertPlaceFromTelegram } from './places';
+import { findDuplicatePlace, findPlaceByTelegramUpdate, listPlaces, upsertPlaceFromTelegram } from './places';
 import { startMemoryMongo } from './testing/memory-mongo';
 
 let db: Db;
@@ -174,86 +174,6 @@ describe('findPlaceByTelegramUpdate', () => {
     expect((await findPlaceByTelegramUpdate(db, groupA, 30))?.id).toBe(saved.id);
     expect(await findPlaceByTelegramUpdate(db, groupB, 30)).toBeNull();
     expect(await findPlaceByTelegramUpdate(db, groupA, 31)).toBeNull();
-  });
-});
-
-describe('backfillPlaceDefaults', () => {
-  const inQ1 = () => 'q1' as const;
-
-  async function insertS1Place(groupId: ObjectId, name: string) {
-    const { mapsUrl, location, source } = newPlace(40, name);
-    await placesCollection(db).insertOne({
-      name,
-      mapsUrl,
-      location,
-      source,
-      _id: new ObjectId(),
-      groupId,
-      ingestStatus: 'saved',
-      visitStatus: 'want_to_try',
-      createdAt: new Date('2026-01-01'),
-      updatedAt: new Date('2026-01-01'),
-    });
-  }
-
-  it('fills only the missing fields of S1/S2 places and leaves complete ones untouched', async () => {
-    const group = new ObjectId();
-    await insertS1Place(group, 'Phở Cũ');
-    const complete = await upsertPlaceFromTelegram(db, group.toHexString(), {
-      ...newPlace(41, 'Quán Đủ'),
-      address: '1 Đường A',
-      priceRange: 'under_50k',
-    });
-    const before = await placesCollection(db).findOne({ _id: new ObjectId(complete.id) });
-
-    const result = await backfillPlaceDefaults(db, group.toHexString(), { findLegacyDistrict: inQ1 });
-
-    expect(result).toEqual({ scanned: 2, updated: 1 });
-    const old = await placesCollection(db).findOne({ name: 'Phở Cũ', groupId: group });
-    expect(old).toMatchObject({
-      mapsFeatureId: null,
-      address: null,
-      area: { city: null, ward: null, legacyDistrict: 'q1' },
-      searchText: 'pho cu quan 1',
-      cuisine: [],
-      dishType: [],
-      priceRange: null,
-      highlights: [],
-      tagIds: [],
-    });
-    expect(old?.updatedAt).toEqual(new Date('2026-01-01'));
-    expect(await placesCollection(db).findOne({ _id: new ObjectId(complete.id) })).toEqual(before);
-  });
-
-  it('never overwrites an existing value', async () => {
-    const group = new ObjectId();
-    await insertS1Place(group, 'Có Địa Chỉ');
-    await placesCollection(db).updateOne({ groupId: group }, { $set: { address: '12 Đường B', priceRange: '50k_100k' } });
-
-    await backfillPlaceDefaults(db, group.toHexString(), { findLegacyDistrict: inQ1 });
-
-    expect(await placesCollection(db).findOne({ groupId: group })).toMatchObject({ address: '12 Đường B', priceRange: '50k_100k' });
-  });
-
-  it('writes nothing on a dry run but reports the counts', async () => {
-    const group = new ObjectId();
-    await insertS1Place(group, 'Dry Run');
-
-    const result = await backfillPlaceDefaults(db, group.toHexString(), { findLegacyDistrict: inQ1, dryRun: true });
-
-    expect(result).toEqual({ scanned: 1, updated: 1 });
-    expect((await placesCollection(db).findOne({ groupId: group }))?.searchText).toBeUndefined();
-  });
-
-  it('leaves other groups alone', async () => {
-    const mine = new ObjectId();
-    const other = new ObjectId();
-    await insertS1Place(mine, 'Của tôi');
-    await insertS1Place(other, 'Của người khác');
-
-    await backfillPlaceDefaults(db, mine.toHexString(), { findLegacyDistrict: inQ1 });
-
-    expect((await placesCollection(db).findOne({ groupId: other }))?.searchText).toBeUndefined();
   });
 });
 
