@@ -7,8 +7,8 @@ import { type PlaceExtraction, loadAppEnv, matchTags, normalizeTagName, stripMap
 import { wrapLanguageModel } from 'ai';
 import { DEFAULT_MODEL_IDS, extractPlaceDetails, getModel, type ExtractionInput } from '../src/index';
 
-/** Free-tier requests per minute of the chosen model (AI Studio → rate limits). Owner confirms in S3 Task 0. */
-const REQUESTS_PER_MINUTE = 10;
+/** Free-tier requests per minute of the chosen model (AI Studio → rate limits): 15 for the Flash Lite models, 5 for Flash. */
+const REQUESTS_PER_MINUTE = 15;
 
 interface Sample {
   id: string;
