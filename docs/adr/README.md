@@ -25,6 +25,7 @@ One file per decision. An accepted ADR's decision is never edited. To change cou
 | [0017](0017-inject-fetch-for-http-tests.md) | Inject `fetch` for HTTP tests instead of MSW | Accepted |
 | [0018](0018-district-polygons-from-geoboundaries.md) | District polygons from geoBoundaries instead of GADM | Accepted |
 | [0019](0019-duplicate-places-by-feature-id-then-name-and-distance.md) | Detect an already-saved place by feature id, then by name and distance | Accepted |
+| [0020](0020-gemini-flash-lite-for-extraction.md) | Gemini Flash Lite as the extraction model | Accepted |
 
 ## Template
 

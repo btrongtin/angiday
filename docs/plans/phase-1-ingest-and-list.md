@@ -78,10 +78,11 @@ The thinnest path through **every** hop. Most AWS learning happens here.
 **Demo:** "maps link + bún bò cay, rẻ, hợp hẹn hò" → bot replies with cuisine, dish type, price range, highlights and tags; web card shows them.
 
 - Taxonomy enums with Vietnamese labels in `packages/shared` (ADR-0012).
-- `packages/ai`: `getModel('extract')`, extraction prompt, `generateObject` with the zod schema; re-prompt with the zod error (max 2 retries). Tests with the AI SDK mock model.
+- `packages/ai`: `getModel('extract')`, extraction prompt, `generateText` + `Output.object` with the zod schema (`generateObject` is deprecated in AI SDK 7); re-prompt with the zod error (max 2 retries). Tests with the AI SDK mock model. Model: Flash Lite ([ADR-0020](../adr/0020-gemini-flash-lite-for-extraction.md)).
 - Tags: `tags` repository; map LLM tag names → ids by normalized match; create a tag only if the user wrote it (ADR-0006).
 - Bot reply format with the extracted fields.
-- `pnpm eval:extract`: 15–20 real sample messages, run manually.
+- `pnpm eval:extract`: real sample messages (3 so far; growing them is in the backlog), run manually; real Gemini answers saved as test fixtures.
+- A link to a place that is already saved is answered, not saved twice ([ADR-0019](../adr/0019-duplicate-places-by-feature-id-then-name-and-distance.md)). The planned backfill of S1/S2 places was dropped: the database is reset before real use.
 
 ### S4 — Web filters · ~10h
 
