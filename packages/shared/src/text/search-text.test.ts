@@ -23,11 +23,22 @@ describe('buildPlaceSearchText', () => {
         name: 'Bún bò Huế O Phượng',
         address: 'Đường Nguyễn Đình Chiểu, Phường Xuân Hòa',
         area: { legacyDistrict: 'q3', ward: 'Phường Xuân Hòa', city: 'Thành phố Hồ Chí Minh' },
+        highlights: [],
       }),
     ).toBe('bun bo hue o phuong duong nguyen dinh chieu phuong xuan hoa phuong xuan hoa thanh pho ho chi minh quan 3');
   });
 
   it('skips missing parts', () => {
-    expect(buildPlaceSearchText({ name: 'Bún bò Huế O Phượng', address: null, area: EMPTY_AREA })).toBe('bun bo hue o phuong');
+    expect(buildPlaceSearchText({ name: 'Bún bò Huế O Phượng', address: null, area: EMPTY_AREA, highlights: [] })).toBe(
+      'bun bo hue o phuong',
+    );
+  });
+});
+
+describe('buildPlaceSearchText highlights', () => {
+  it('appends accent-free highlights after the area parts', () => {
+    expect(buildPlaceSearchText({ name: 'Quán A', address: null, area: EMPTY_AREA, highlights: ['bún bò cay'] })).toBe(
+      'quan a bun bo cay',
+    );
   });
 });

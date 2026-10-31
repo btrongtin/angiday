@@ -10,11 +10,13 @@ export const SSM_PARAMS = {
   TELEGRAM_BOT_TOKEN: { name: '/angiday/telegram-bot-token', secure: true },
   TELEGRAM_WEBHOOK_SECRET: { name: '/angiday/telegram-webhook-secret', secure: true },
   TELEGRAM_ALLOWED_CHAT_IDS: { name: '/angiday/allowed-chat-ids', secure: false },
+  GOOGLE_GENERATIVE_AI_API_KEY: { name: '/angiday/gemini-api-key', secure: true },
 } as const;
 
 export type SsmParamKey = keyof typeof SSM_PARAMS;
 
-export const WORKER_TIMEOUT_SECONDS = 30;
+/** Geocoding (≤ 3 s) + one LLM call and up to two re-prompts (25 s budget each) must fit. */
+export const WORKER_TIMEOUT_SECONDS = 60;
 
 /** Not a secret, so a plain Lambda env var set by CDK instead of an SSM parameter (ADR-0016). */
 export const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';

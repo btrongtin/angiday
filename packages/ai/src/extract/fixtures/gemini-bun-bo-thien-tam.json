@@ -1,0 +1,32 @@
+{
+  "sampleId": "bun-bo-thien-tam",
+  "modelId": "gemini-3.5-flash-lite",
+  "capturedAt": "2026-10-31T14:46:27.718Z",
+  "input": {
+    "note": "bún bò Thiện tâm gần nhà, ăn sáng giá rẻ",
+    "place": {
+      "name": "Bún Bò Huế Thiện Tâm",
+      "address": null,
+      "areaLabel": "Q2 · Phường Cát Lái"
+    },
+    "existingTagNames": [
+      "đi nhậu"
+    ]
+  },
+  "rawText": "{\n  \"cuisine\": [\n    \"vietnamese\"\n  ],\n  \"dishType\": [\n    \"noodle_soup\"\n  ],\n  \"priceRange\": \"under_50k\",\n  \"highlights\": [\n    \"bún bò Huế\"\n  ],\n  \"tags\": [\n    \"ăn sáng\"\n  ]\n}",
+  "details": {
+    "cuisine": [
+      "vietnamese"
+    ],
+    "dishType": [
+      "noodle_soup"
+    ],
+    "priceRange": "under_50k",
+    "highlights": [
+      "bún bò Huế"
+    ],
+    "tags": [
+      "ăn sáng"
+    ]
+  }
+}

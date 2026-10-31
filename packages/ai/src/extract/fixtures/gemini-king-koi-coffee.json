@@ -1,0 +1,31 @@
+{
+  "sampleId": "king-koi-coffee",
+  "modelId": "gemini-3.5-flash-lite",
+  "capturedAt": "2026-10-31T14:46:33.608Z",
+  "input": {
+    "note": "cà phê gần nhà, thoáng mát, hợp hẹn hò, giá vừa phải",
+    "place": {
+      "name": "King Koi Coffee Quận 2",
+      "address": null,
+      "areaLabel": "Q2 · Phường Bình Trưng"
+    },
+    "existingTagNames": []
+  },
+  "rawText": "{\"cuisine\": [\"other\"], \"dishType\": [\"drink\"], \"priceRange\": \"50k_100k\", \"highlights\": [\"cà phê\"], \"tags\": [\"hẹn hò\", \"thoáng mát\"]}",
+  "details": {
+    "cuisine": [
+      "other"
+    ],
+    "dishType": [
+      "drink"
+    ],
+    "priceRange": "50k_100k",
+    "highlights": [
+      "cà phê"
+    ],
+    "tags": [
+      "hẹn hò",
+      "thoáng mát"
+    ]
+  }
+}

@@ -8,11 +8,21 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "eval:extract": "tsx --env-file=../../.env scripts/eval-extract.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "eslint": "catalog:",
-    "typescript": "catalog:"
+    "tsx": "^4.23.15",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^4.0.102",
+    "@angiday/shared": "workspace:*",
+    "ai": "^7.0.148",
+    "zod": "catalog:"
   }
 }

@@ -14,8 +14,8 @@ export function normalizeForSearch(text: string): string {
     .trim();
 }
 
-/** Accent-free text a place can be found by: name, address, ward, city and the old district's full name. */
-export function buildPlaceSearchText(place: { name: string; address: string | null; area: Area }): string {
+/** Accent-free text a place can be found by: name, address, ward, city, the old district's full name and highlights. */
+export function buildPlaceSearchText(place: { name: string; address: string | null; area: Area; highlights: readonly string[] }): string {
   const { area } = place;
   const parts = [
     place.name,
@@ -23,6 +23,7 @@ export function buildPlaceSearchText(place: { name: string; address: string | nu
     area.ward,
     area.city,
     area.legacyDistrict ? LEGACY_DISTRICTS[area.legacyDistrict].fullName : null,
+    ...place.highlights,
   ];
   return normalizeForSearch(parts.filter((part) => part !== null).join(' '));
 }

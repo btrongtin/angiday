@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractMapsUrl, isGoogleMapsHost, parseMapsPlaceUrl } from './maps-url';
+import { extractMapsUrl, isGoogleMapsHost, parseMapsPlaceUrl, stripMapsUrls } from './maps-url';
 import { placeUrlFixtures, unparseableUrlFixtures } from './maps-url.fixtures';
 
 describe('parseMapsPlaceUrl', () => {
@@ -57,5 +57,17 @@ describe('isGoogleMapsHost', () => {
 
   it.each(['google.com.evil.example', 'evilgoogle.com', 'consent.google.com', 'example.com'])('rejects %s', (host) => {
     expect(isGoogleMapsHost(host)).toBe(false);
+  });
+});
+
+describe('stripMapsUrls', () => {
+  it.each([
+    ['ngon nè https://maps.app.goo.gl/AbC123xyz', 'ngon nè'],
+    ['“https://maps.app.goo.gl/AbC” bún bò cay', 'bún bò cay'],
+    ['maps.app.goo.gl/AbC', ''],
+    ['TÔ GHẸ\nhttps://maps.app.goo.gl/x\n\nhợp hẹn hò', 'TÔ GHẸ\nhợp hẹn hò'],
+    ['https://maps.app.goo.gl/a rồi https://maps.app.goo.gl/b ngon', 'rồi ngon'],
+  ])('%j → %j', (input, expected) => {
+    expect(stripMapsUrls(input)).toBe(expected);
   });
 });

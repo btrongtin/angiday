@@ -1,36 +1,43 @@
+import type { ExtractionInput, ExtractionResult } from '@angiday/ai';
 import {
   claimTelegramUpdate,
   type Db,
+  ensureTags,
+  findDuplicatePlace,
   findGroupByTelegramChatId,
+  findPlaceByTelegramUpdate,
+  listTags,
   markTelegramUpdateDone,
   upsertPlaceFromTelegram,
 } from '@angiday/db';
-import { type Area, formatAreaLabel, type IngestJob, parseMapsPlaceUrl } from '@angiday/shared';
+import { type Area, dropPlaceEcho, formatAreaLabel, type IngestJob, matchTags, parseMapsPlaceUrl, stripMapsUrls } from '@angiday/shared';
 import { findLegacyDistrict } from '@angiday/shared/legacy-district';
 import type { ReverseGeocode } from '../geo/nominatim';
 import type { Log } from '../lib/log';
 import type { TelegramApi } from '../telegram/api';
+import { formatAlreadySavedReply, formatSavedReply } from './format-reply';
 
-export type ProcessOutcome = 'saved' | 'unparsed' | 'duplicate' | 'unknown_group';
+export type ProcessOutcome = 'saved' | 'already_saved' | 'unparsed' | 'duplicate' | 'unknown_group';
 
 export interface ProcessIngestJobDeps {
   db: Db;
   telegram: Pick<TelegramApi, 'sendMessage'>;
   resolveMapsLink: (url: string) => Promise<string | null>;
   reverseGeocode: ReverseGeocode;
+  /** Rejects on transport errors (429, network) so SQS retries; see `extractPlaceDetails` in packages/ai. */
+  extractPlaceDetails: (input: ExtractionInput) => Promise<ExtractionResult>;
   logger: Log;
 }
 
-export const replySaved = (name: string, areaLabel: string | null) =>
-  areaLabel === null ? `Đã lưu: ${name}` : `Đã lưu: ${name} — ${areaLabel}`;
 export const REPLY_UNREADABLE_LINK =
   'Mình chưa đọc được link Google Maps này. Bạn thử bấm "Chia sẻ" trong app Google Maps rồi gửi lại link nhé.';
 
 /**
- * F1 for S2: resolve the link, parse name + coordinates + feature id, reverse-geocode (never fails the job), find the
- * legacy district, save, reply. Safe to run twice for the same
- * update: `telegram_updates` skips finished updates and the place upsert is keyed by the update id.
- * Throws on transient errors (network, Telegram, Mongo) so SQS retries; returns for outcomes a retry can't change.
+ * F1 for S3: resolve the link, parse name + coordinates + feature id, reverse-geocode (never fails the job), find the
+ * legacy district, extract cuisine / dish type / price / highlights / tags with the LLM, map tag names to ids, save, reply.
+ * Safe to run twice for the same update: `telegram_updates` skips finished updates, the place upsert is keyed by the
+ * update id, and a place that is already saved is replied from the database (no second geocode, no second LLM call).
+ * Throws on transient errors (network, LLM, Telegram, Mongo) so SQS retries; returns for outcomes a retry can't change.
  */
 export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDeps): Promise<ProcessOutcome> {
   const { db, telegram, logger } = deps;
@@ -50,6 +57,16 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
   const reply = (text: string) =>
     telegram.sendMessage({ chatId: job.chatId, text, replyToMessageId: job.messageId, threadId: job.threadId });
 
+  // A retry after the place was saved (the reply or `markDone` failed): answer from what is stored.
+  const existing = await findPlaceByTelegramUpdate(db, groupId, job.updateId);
+  if (existing?.ingestStatus === 'saved') {
+    logger.info('Place already saved; replying again', { groupId, placeId: existing.id });
+    const names = new Map((await listTags(db, groupId)).map((tag) => [tag.id, tag.name]));
+    await reply(formatSavedReply(existing, existing.tagIds.flatMap((id) => names.get(id) ?? [])));
+    await markTelegramUpdateDone(db, groupId, job.updateId);
+    return 'saved';
+  }
+
   const resolvedUrl = await deps.resolveMapsLink(job.mapsUrl);
   const parsed = resolvedUrl === null ? null : parseMapsPlaceUrl(resolvedUrl);
   if (resolvedUrl === null || parsed === null) {
@@ -57,6 +74,20 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
     await reply(REPLY_UNREADABLE_LINK);
     await markTelegramUpdateDone(db, groupId, job.updateId);
     return 'unparsed';
+  }
+
+  // The same restaurant shared again (ADR-0019): say so, and skip geocoding and the LLM.
+  const repeated = await findDuplicatePlace(db, groupId, {
+    mapsFeatureId: parsed.featureId,
+    name: parsed.name,
+    lat: parsed.lat,
+    lng: parsed.lng,
+  });
+  if (repeated) {
+    logger.info('Place already saved; not saving again', { groupId, placeId: repeated.id });
+    await reply(formatAlreadySavedReply(repeated));
+    await markTelegramUpdateDone(db, groupId, job.updateId);
+    return 'already_saved';
   }
 
   const geocoded = await deps.reverseGeocode(parsed.lat, parsed.lng);
@@ -70,14 +101,40 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
     ward: geocoded.kind === 'found' ? geocoded.ward : null,
     legacyDistrict: findLegacyDistrict(parsed.lat, parsed.lng),
   };
+  const address = geocoded.kind === 'found' ? geocoded.address : null;
+
+  // The user's own words only: not the Maps link, nor the place name/address the Maps app adds to its share text.
+  const note = dropPlaceEcho(stripMapsUrls(job.text), [parsed.name, address ?? '']);
+  const existingTags = await listTags(db, groupId);
+  const extraction = await deps.extractPlaceDetails({
+    note,
+    place: { name: parsed.name, address, areaLabel: formatAreaLabel(area) },
+    existingTagNames: existingTags.map((tag) => tag.name),
+  });
+  // Without any words of the user's own, price and tags would be guesses from the place name alone: leave them empty.
+  const hasNote = note.trim() !== '';
+  const priceRange = hasNote ? extraction.details.priceRange : null;
+  const { tagIds, toCreate } = matchTags({
+    proposed: hasNote ? extraction.details.tags : [],
+    existing: existingTags,
+    note,
+  });
+  const created = await ensureTags(db, groupId, toCreate);
+  const allTags = [...existingTags, ...created];
+  const finalTagIds = [...new Set([...tagIds, ...created.map((tag) => tag.id)])];
 
   const place = await upsertPlaceFromTelegram(db, groupId, {
     name: parsed.name,
     mapsUrl: resolvedUrl,
     mapsFeatureId: parsed.featureId,
     location: { type: 'Point', coordinates: [parsed.lng, parsed.lat] },
-    address: geocoded.kind === 'found' ? geocoded.address : null,
+    address,
     area,
+    cuisine: extraction.details.cuisine,
+    dishType: extraction.details.dishType,
+    priceRange,
+    highlights: extraction.details.highlights,
+    tagIds: finalTagIds,
     source: {
       telegramChatId: job.chatId,
       telegramMessageId: job.messageId,
@@ -85,8 +142,16 @@ export async function processIngestJob(job: IngestJob, deps: ProcessIngestJobDep
       telegramUserId: job.userId,
     },
   });
-  await reply(replySaved(place.name, formatAreaLabel(place.area)));
+  const tagNames = finalTagIds.flatMap((id) => allTags.find((tag) => tag.id === id)?.name ?? []);
+  await reply(formatSavedReply(place, tagNames));
   await markTelegramUpdateDone(db, groupId, job.updateId);
-  logger.info('Place saved', { groupId, placeId: place.id });
+  logger.info('Place saved', {
+    groupId,
+    placeId: place.id,
+    llmAttempts: extraction.attempts,
+    inputTokens: extraction.inputTokens,
+    outputTokens: extraction.outputTokens,
+    tagsCreated: created.length,
+  });
   return 'saved';
 }

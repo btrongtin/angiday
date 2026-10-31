@@ -63,7 +63,7 @@ The field-level source of truth is the zod schemas in `packages/shared`. This se
 |---|---|---|
 | `groups` | Tenant; links a Telegram chat to a group; stores registered topic ids (`saveThreadId`, `askThreadId`) | unique `telegramChatId` |
 | `members` | People in a group (Telegram user, display name); used for "added by" and per-person ratings | `{ groupId, telegramUserId }` unique |
-| `places` | One saved restaurant | `{ groupId, createdAt }`, `{ groupId, "source.telegramUpdateId" }` unique (idempotent save), `{ groupId, tagIds }` (multikey, later), `{ groupId, "area.legacyDistrict" }` (later), `location` 2dsphere (later) |
+| `places` | One saved restaurant | `{ groupId, createdAt }`, `{ groupId, mapsFeatureId }` (already-saved check), `{ groupId, "source.telegramUpdateId" }` unique (idempotent save), `{ groupId, tagIds }` (multikey, later), `{ groupId, "area.legacyDistrict" }` (later), `location` 2dsphere (later) |
 | `tags` | Per-group tag registry `{ name, normalized }` | `{ groupId, normalized }` unique |
 | `telegram_updates` | Processed update ids for idempotency, scoped per group | `{ groupId, updateId }` unique, TTL 7 days on `createdAt` |
 | `chat_turns` | Recent Telegram chat turns per topic, for multi-turn context (Phase 2) | `{ groupId, threadId, createdAt }`, TTL |
@@ -98,14 +98,15 @@ sequenceDiagram
   IL-->>TG: 200 OK (fast)
   Q->>W: deliver message
   W->>DB: record update_id (skip if duplicate)
-  W->>DB: insert place (ingestStatus=processing)
+  W->>DB: place already saved for this update? → reply from DB, stop
   W->>W: follow short-link redirects, parse name + coords + feature id from URL
+  W->>DB: same place already saved (feature id, else name + 50 m)? → reply "đã lưu trước đó", stop (ADR-0019)
   W->>M: reverse geocode (coords) → address, ward, city
   W->>W: point-in-polygon → area.legacyDistrict
-  W->>L: extract cuisine, dishType, price, tag names
+  W->>L: extract cuisine, dishType, price, highlights, tag names
   W->>W: zod validate (retry with error on bad output)
-  W->>DB: map tag names → ids, save (ingestStatus=saved)
-  W->>TG: "Saved: Bún bò … — Q3, #giá-rẻ"
+  W->>DB: map tag names → ids (new tag only if the user wrote it), save (ingestStatus=saved)
+  W->>TG: "Đã lưu: Bún bò … — Q3" + cuisine · dish · price, highlights, tags
 ```
 
 ### F2. Missing info → ask back
@@ -194,12 +195,13 @@ Same chat core as F5; only the adapter differs (no streaming, Telegram formattin
 | Failure | Handling |
 |---|---|
 | Telegram resends the same update | Idempotency via unique `updateId` |
-| LLM returns invalid JSON / schema | Re-prompt with the zod error, max N attempts, then fail |
+| LLM returns invalid JSON / schema | Re-prompt with the zod error, 3 model calls in total, then throw (SQS retries) |
 | LLM 429 (free-tier RPM limit) | Worker: exponential backoff, SQS redelivery as the outer retry. Chat: short retry, then a friendly "busy, try again" message |
 | Unknown chat sends to bot | Dropped at ingest |
 | Maps URL can't be parsed / has no coordinates | S1 behaviour until S5: reply "chưa đọc được", save nothing; then `needs_info`, ask for a better link ([ADR-0016](adr/0016-place-details-from-url-and-nominatim.md)) |
 | Reverse geocoding fails or returns nothing | Save without address/ward/city, log a warning; `legacyDistrict` still comes from polygons |
-| Message fails repeatedly | DLQ + alarm; place marked `failed` |
+| Message fails repeatedly | DLQ + alarm; place marked `failed` (S6). Until then nothing is saved and nobody is told: see the extraction fallback in progress.md → Backlog |
+| Same place shared twice | Bot replies that it is already saved; no geocoder or LLM call, no second place ([ADR-0019](adr/0019-duplicate-places-by-feature-id-then-name-and-distance.md)) |
 
 ## Observability
 

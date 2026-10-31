@@ -1,0 +1,30 @@
+{
+  "sampleId": "to-ghe-link-only",
+  "modelId": "gemini-3.5-flash-lite",
+  "capturedAt": "2026-10-31T14:46:21.670Z",
+  "input": {
+    "note": "",
+    "place": {
+      "name": "TÔ GHẸ - HỦ TIẾU GHẸ Tân Định",
+      "address": null,
+      "areaLabel": "Q1 · Phường Tân Định"
+    },
+    "existingTagNames": []
+  },
+  "rawText": "{\"cuisine\": [\"vietnamese\"], \"dishType\": [\"noodle_soup\", \"seafood\"], \"priceRange\": null, \"highlights\": [\"tô ghẹ\", \"hủ tiếu ghẹ\"], \"tags\": []}",
+  "details": {
+    "cuisine": [
+      "vietnamese"
+    ],
+    "dishType": [
+      "noodle_soup",
+      "seafood"
+    ],
+    "priceRange": null,
+    "highlights": [
+      "tô ghẹ",
+      "hủ tiếu ghẹ"
+    ],
+    "tags": []
+  }
+}

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { areaSchema } from './area/legacy-districts';
 import { objectIdSchema } from './ids';
+import { cuisineSchema, dishTypeSchema, priceRangeSchema } from './taxonomy';
 
 /** Pipeline state (architecture.md → Data model). */
 export const ingestStatusSchema = z.enum(['processing', 'needs_info', 'saved', 'failed']);
@@ -33,13 +34,30 @@ export const placeSchema = z.object({
   /** Street-level address from reverse geocoding (never another POI's name or house number); null when unknown. */
   address: z.string().min(1).nullable(),
   area: areaSchema,
-  /** Accent-free text derived from name, address and area on every write (repository). */
+  cuisine: z.array(cuisineSchema),
+  dishType: z.array(dishTypeSchema),
+  /** Per person; null when unknown. */
+  priceRange: priceRangeSchema.nullable(),
+  /** Standout dishes, free text (found by free-text search, not an enum). */
+  highlights: z.array(z.string().min(1)),
+  /** References into the group's tag registry; ids that no longer resolve are ignored on read (ADR-0006). */
+  tagIds: z.array(objectIdSchema),
+  /** Accent-free text derived from name, address, area and highlights on every write (repository). */
   searchText: z.string(),
   ingestStatus: ingestStatusSchema,
   visitStatus: visitStatusSchema,
   source: telegramSourceSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
+});
+
+export const tagSchema = z.object({
+  id: objectIdSchema,
+  groupId: objectIdSchema,
+  name: z.string().min(1),
+  /** `normalizeTagName(name)`; unique per group. */
+  normalized: z.string().min(1),
+  createdAt: z.date(),
 });
 
 export const groupSchema = z.object({
@@ -53,5 +71,20 @@ export type IngestStatus = z.infer<typeof ingestStatusSchema>;
 export type VisitStatus = z.infer<typeof visitStatusSchema>;
 export type GeoPoint = z.infer<typeof geoPointSchema>;
 export type Place = z.infer<typeof placeSchema>;
-export type NewTelegramPlace = Pick<Place, 'name' | 'mapsUrl' | 'mapsFeatureId' | 'location' | 'address' | 'area' | 'source'>;
+export type Tag = z.infer<typeof tagSchema>;
+export type NewTelegramPlace = Pick<
+  Place,
+  | 'name'
+  | 'mapsUrl'
+  | 'mapsFeatureId'
+  | 'location'
+  | 'address'
+  | 'area'
+  | 'cuisine'
+  | 'dishType'
+  | 'priceRange'
+  | 'highlights'
+  | 'tagIds'
+  | 'source'
+>;
 export type Group = z.infer<typeof groupSchema>;

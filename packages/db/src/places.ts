@@ -1,13 +1,27 @@
-import { buildPlaceSearchText, EMPTY_AREA, type NewTelegramPlace, type Place } from '@angiday/shared';
+import { buildPlaceSearchText, EMPTY_AREA, type NewTelegramPlace, normalizeForSearch, type Place } from '@angiday/shared';
 import type { Db } from 'mongodb';
 import { type PlaceDoc, placesCollection, toObjectId } from './collections';
 
-function toPlace({ _id, groupId, ...rest }: PlaceDoc): Place {
+function toPlace({ _id, groupId, tagIds, ...rest }: PlaceDoc): Place {
   const mapsFeatureId = rest.mapsFeatureId ?? null;
   const address = rest.address ?? null;
   const area = rest.area ?? EMPTY_AREA;
-  const searchText = rest.searchText ?? buildPlaceSearchText({ name: rest.name, address, area });
-  return { ...rest, mapsFeatureId, address, area, searchText, id: _id.toHexString(), groupId: groupId.toHexString() };
+  const highlights = rest.highlights ?? [];
+  const searchText = rest.searchText ?? buildPlaceSearchText({ name: rest.name, address, area, highlights });
+  return {
+    ...rest,
+    mapsFeatureId,
+    address,
+    area,
+    cuisine: rest.cuisine ?? [],
+    dishType: rest.dishType ?? [],
+    priceRange: rest.priceRange ?? null,
+    highlights,
+    tagIds: (tagIds ?? []).map((id) => id.toHexString()),
+    searchText,
+    id: _id.toHexString(),
+    groupId: groupId.toHexString(),
+  };
 }
 
 /**
@@ -27,6 +41,11 @@ export async function upsertPlaceFromTelegram(db: Db, groupId: string, input: Ne
         location: input.location,
         address: input.address,
         area: input.area,
+        cuisine: input.cuisine,
+        dishType: input.dishType,
+        priceRange: input.priceRange,
+        highlights: input.highlights,
+        tagIds: input.tagIds.map(toObjectId),
         searchText: buildPlaceSearchText(input),
         ingestStatus: 'saved',
         updatedAt: now,
@@ -47,4 +66,42 @@ export async function listPlaces(db: Db, groupId: string, options: { limit?: num
     .limit(options.limit ?? 100)
     .toArray();
   return docs.map(toPlace);
+}
+
+/** The place a Telegram update produced, if any (a retried SQS message finds its earlier result here). */
+export async function findPlaceByTelegramUpdate(db: Db, groupId: string, updateId: number): Promise<Place | null> {
+  const doc = await placesCollection(db).findOne({ groupId: toObjectId(groupId), 'source.telegramUpdateId': updateId });
+  return doc ? toPlace(doc) : null;
+}
+
+/** Two saved places with the same name closer than this are one place (ADR-0019). */
+export const DUPLICATE_RADIUS_METERS = 50;
+const EARTH_RADIUS_METERS = 6_378_100;
+
+/**
+ * A saved place of the group that `candidate` repeats (ADR-0019): the same Maps feature id, else the same name
+ * (ignoring case and accents) within `DUPLICATE_RADIUS_METERS`. Only `saved` places count.
+ */
+export async function findDuplicatePlace(
+  db: Db,
+  groupId: string,
+  candidate: { mapsFeatureId: string | null; name: string; lat: number; lng: number },
+): Promise<Place | null> {
+  const collection = placesCollection(db);
+  const base = { groupId: toObjectId(groupId), ingestStatus: 'saved' as const };
+
+  if (candidate.mapsFeatureId !== null) {
+    const byFeatureId = await collection.findOne({ ...base, mapsFeatureId: candidate.mapsFeatureId });
+    if (byFeatureId) return toPlace(byFeatureId);
+  }
+
+  const nearby = await collection
+    .find({
+      ...base,
+      location: { $geoWithin: { $centerSphere: [[candidate.lng, candidate.lat], DUPLICATE_RADIUS_METERS / EARTH_RADIUS_METERS] } },
+    })
+    .toArray();
+  const wanted = normalizeForSearch(candidate.name);
+  const sameName = nearby.find((doc) => normalizeForSearch(doc.name) === wanted);
+  return sameName ? toPlace(sameName) : null;
 }

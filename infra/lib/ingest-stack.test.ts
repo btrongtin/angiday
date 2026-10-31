@@ -24,8 +24,15 @@ describe('IngestStack', () => {
   it('has a queue with a DLQ after 3 receives and visibility = 6 × worker timeout', () => {
     template.resourceCountIs('AWS::SQS::Queue', 2);
     template.hasResourceProperties('AWS::SQS::Queue', {
-      VisibilityTimeout: 180,
+      VisibilityTimeout: 360,
       RedrivePolicy: { deadLetterTargetArn: Match.anyValue(), maxReceiveCount: 3 },
+    });
+  });
+
+  it('gives the worker a 60 s timeout', () => {
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      Environment: { Variables: Match.objectLike({ POWERTOOLS_SERVICE_NAME: 'ingest-worker' }) },
+      Timeout: 60,
     });
   });
 
@@ -67,6 +74,7 @@ describe('IngestStack', () => {
         Variables: Match.objectLike({
           MONGODB_URI_PARAM: '/angiday/mongodb-uri',
           TELEGRAM_BOT_TOKEN_PARAM: '/angiday/telegram-bot-token',
+          GOOGLE_GENERATIVE_AI_API_KEY_PARAM: '/angiday/gemini-api-key',
           NOMINATIM_BASE_URL: 'https://nominatim.openstreetmap.org',
         }),
       },
@@ -84,6 +92,8 @@ describe('IngestStack', () => {
 
     expect(workerPolicy).toBeDefined();
     expect(workerPolicy).toContain('/angiday/telegram-bot-token');
+    expect(workerPolicy).toContain('/angiday/gemini-api-key');
+    expect(webhookPolicy).not.toContain('/angiday/gemini-api-key');
     expect(workerPolicy).not.toContain('sqs:SendMessage');
     expect(workerPolicy).not.toContain('/angiday/telegram-webhook-secret');
   });

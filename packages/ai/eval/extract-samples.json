@@ -1,0 +1,39 @@
+[
+  {
+    "id": "to-ghe-link-only",
+    "text": "https://maps.app.goo.gl/tAdfkmLvqTCyUNA49",
+    "place": {
+      "name": "TÔ GHẸ - HỦ TIẾU GHẸ Tân Định",
+      "address": null,
+      "areaLabel": "Q1 · Phường Tân Định"
+    },
+    "existingTags": [],
+    "expect": { "cuisine": ["vietnamese"], "priceRange": null, "tags": [] }
+  },
+  {
+    "id": "bun-bo-thien-tam",
+    "text": "https://maps.app.goo.gl/1LfqrzWu8geMNehV8 bún bò Thiện tâm gần nhà, ăn sáng giá rẻ",
+    "place": {
+      "name": "Bún Bò Huế Thiện Tâm",
+      "address": null,
+      "areaLabel": "Q2 · Phường Cát Lái"
+    },
+    "existingTags": ["đi nhậu"],
+    "expect": {
+      "cuisine": ["vietnamese"],
+      "dishType": ["noodle_soup"],
+      "priceRange": "under_50k"
+    }
+  },
+  {
+    "id": "king-koi-coffee",
+    "text": "cà phê gần nhà, thoáng mát, hợp hẹn hò, giá vừa phải https://maps.app.goo.gl/DdwtbjYrDmXBMiWU6",
+    "place": {
+      "name": "King Koi Coffee Quận 2",
+      "address": null,
+      "areaLabel": "Q2 · Phường Bình Trưng"
+    },
+    "existingTags": [],
+    "expect": { "priceRange": "50k_100k", "dishType": ["drink"] }
+  }
+]

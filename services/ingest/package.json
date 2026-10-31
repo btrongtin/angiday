@@ -11,6 +11,7 @@
     "set-webhook": "tsx --env-file=../../.env scripts/set-webhook.ts"
   },
   "dependencies": {
+    "@angiday/ai": "workspace:*",
     "@angiday/db": "workspace:*",
     "@angiday/shared": "workspace:*",
     "@aws-lambda-powertools/logger": "^2.36.0",

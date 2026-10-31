@@ -38,6 +38,8 @@ export const appEnvShape = {
   TELEGRAM_WEBHOOK_SECRET: z.string().min(1),
   TELEGRAM_ALLOWED_CHAT_IDS: chatIdList,
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1),
+  /** Not a secret; overrides the default extraction model in packages/ai/src/models.ts. */
+  GEMINI_EXTRACT_MODEL: z.string().min(1).optional(),
   WEB_LOGIN_USERNAME: z.string().min(1),
   WEB_LOGIN_PASSWORD: z.string().min(12, 'must be at least 12 characters'),
   SESSION_SECRET: z.string().min(32, 'must be at least 32 characters (openssl rand -hex 32)'),
