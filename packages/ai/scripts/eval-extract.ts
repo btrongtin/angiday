@@ -37,6 +37,7 @@ const samples = (JSON.parse(await readFile(samplesUrl, 'utf-8')) as Sample[]).fi
 const rawTexts: string[] = [];
 let reasoningTokens = 0;
 let elapsedMs = 0;
+let answeredBy: string | undefined;
 const model = wrapLanguageModel({
   model: getModel('extract', { apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY, extractModelId: env.GEMINI_EXTRACT_MODEL }),
   middleware: {
@@ -46,6 +47,7 @@ const model = wrapLanguageModel({
       const result = await doGenerate();
       elapsedMs += Date.now() - started;
       reasoningTokens += result.usage.outputTokens.reasoning ?? 0;
+      answeredBy = result.response?.modelId;
       rawTexts.push(result.content.flatMap((part) => (part.type === 'text' ? [part.text] : [])).join(''));
       return result;
     },
@@ -80,7 +82,7 @@ for (const [index, sample] of samples.entries()) {
       if (ok) matched += 1;
     }
     console.log(
-      `${sample.id}: attempts=${result.attempts} tokens=${result.inputTokens}+${result.outputTokens} (reasoning ${reasoningTokens}) ${(elapsedMs / 1000).toFixed(1)}s highlights=${JSON.stringify(result.details.highlights)}`,
+      `${sample.id}: attempts=${result.attempts} tokens=${result.inputTokens}+${result.outputTokens} (reasoning ${reasoningTokens}) ${(elapsedMs / 1000).toFixed(1)}s answered-by=${answeredBy ?? '?'} highlights=${JSON.stringify(result.details.highlights)}`,
     );
     for (const [field, ok, actual] of checks) console.log(`  ${ok ? '✓' : '✗'} ${field}: ${JSON.stringify(actual)}`);
     // Shown even when the sample has no `expect.tags`, so the proposed tags can be judged by eye.
