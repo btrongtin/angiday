@@ -27,6 +27,8 @@ export interface ExtractOptions {
   abortSignal?: AbortSignal | undefined;
   /** Model calls before giving up (first try + re-prompts). Default 3 (ADR-0009: max 2 re-prompts). */
   maxAttempts?: number;
+  /** Gemini reasoning effort; reasoning tokens count as output tokens and add latency. Omit for the model default. */
+  thinkingLevel?: 'minimal' | 'low' | 'medium' | 'high' | undefined;
 }
 
 /**
@@ -48,6 +50,7 @@ export async function extractPlaceDetails(input: ExtractionInput, options: Extra
         messages,
         output: Output.object({ schema: placeExtractionSchema }),
         maxRetries: 0,
+        ...(options.thinkingLevel ? { providerOptions: { google: { thinkingConfig: { thinkingLevel: options.thinkingLevel } } } } : {}),
         ...(options.abortSignal ? { abortSignal: options.abortSignal } : {}),
       });
       inputTokens += result.usage.inputTokens ?? 0;

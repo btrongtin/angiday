@@ -100,6 +100,22 @@ describe('extractPlaceDetails', () => {
     expect(model.doGenerateCalls[0]?.abortSignal).toBeDefined();
   });
 
+  it('asks Gemini for the requested thinking level', async () => {
+    const model = mockModel(VALID);
+
+    await extractPlaceDetails(INPUT, { model, thinkingLevel: 'minimal' });
+
+    expect(model.doGenerateCalls[0]?.providerOptions).toEqual({ google: { thinkingConfig: { thinkingLevel: 'minimal' } } });
+  });
+
+  it('sends no provider options when no thinking level is given', async () => {
+    const model = mockModel(VALID);
+
+    await extractPlaceDetails(INPUT, { model });
+
+    expect(model.doGenerateCalls[0]?.providerOptions).toBeUndefined();
+  });
+
   it('cleans the answer (dedupes, caps, drops padding)', async () => {
     const model = mockModel({ ...VALID, cuisine: ['vietnamese', 'vietnamese', 'other'], tags: ['#hẹn_hò', 'Hẹn hò'] });
 
