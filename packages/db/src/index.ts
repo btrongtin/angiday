@@ -5,7 +5,8 @@ export { ensureIndexes, TELEGRAM_UPDATE_TTL_SECONDS } from './indexes';
 export {
   DUPLICATE_RADIUS_METERS,
   findDuplicatePlace,
-  findPlaceByTelegramUpdate, listPlaces,
+  findPlaceByTelegramUpdate,
+  listPlaces,
   upsertPlaceFromTelegram,
 } from './places';
 export { ensureTags, listTags } from './tags';

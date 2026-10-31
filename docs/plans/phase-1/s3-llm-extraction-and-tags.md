@@ -355,7 +355,9 @@ Pipeline (after claim):
 
 ---
 
-### Task 8: Backfill S1/S2 places
+### Task 8: Backfill S1/S2 places — REMOVED 2026-10-31
+
+> **Removed at the owner's request:** the database will be wiped and a new Telegram group created before real use, so there are no old places to backfill. The code (commit `c5761ee`) was deleted; recover it from git if a future migration needs a template. Future fields that will be filtered on need their own backfill step in their plan.
 
 **Files:**
 - Modify: `packages/db/src/places.ts`, `packages/db/src/places.test.ts`, `packages/db/src/index.ts`
