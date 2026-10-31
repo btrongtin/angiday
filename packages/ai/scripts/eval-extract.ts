@@ -71,6 +71,8 @@ for (const [index, sample] of samples.entries()) {
       `${sample.id}: attempts=${result.attempts} tokens=${result.inputTokens}+${result.outputTokens} highlights=${JSON.stringify(result.details.highlights)}`,
     );
     for (const [field, ok, actual] of checks) console.log(`  ${ok ? '✓' : '✗'} ${field}: ${JSON.stringify(actual)}`);
+    // Shown even when the sample has no `expect.tags`, so the proposed tags can be judged by eye.
+    if (!want?.tags) console.log(`  · tags (not checked): ${JSON.stringify(finalTags)}`);
 
     if (values['save-fixtures']) {
       if (result.attempts === 1 && rawTexts[0] !== undefined) {
