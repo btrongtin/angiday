@@ -55,6 +55,7 @@ Goal: share a Maps link in Telegram → place appears in the web list. Plan: [pl
 
 ## Backlog (later / stretch)
 
+- [ ] Grow `packages/ai/eval/extract-samples.json` from 3 to 15–20 real messages (S3 plan wanted 15–20): include a message sent with the Maps app's "Chia sẻ" button, an explicit price ("tầm 40k"), a non-Vietnamese cuisine, a dessert/vegetarian place. Option: export the Telegram chat as JSON and convert locally (keep the export out of the repo). Re-run `pnpm eval:extract --save-fixtures` afterwards
 - [ ] Web: add/edit cuisine & dish-type values (moves enums to a per-group registry; new ADR superseding ADR-0012)
 - [ ] Visit status & ratings via Telegram inline buttons
 - [ ] `/add` auto-search + inline buttons to pick the place (ADR-0008); needs a search provider other than Nominatim (ADR-0016)
