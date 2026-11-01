@@ -89,9 +89,10 @@ The thinnest path through **every** hop. Most AWS learning happens here.
 **Demo:** filter "Hàn + nướng + Q3 + < 200k", or type "q.3" / "Xuân Hòa" / "bun bo" and get the right places.
 
 - `searchPlaces(groupId, filters)`: enums, area (alias table → `legacyDistrict`, else `searchText`), price, tags, visit status, free text; integration tests per filter.
-- Area alias table (`q3`, `q.3`, `quận 3`, `quan 3`, `district 3` → `q3`; `q2`, `q9`, `thủ đức` → `thu_duc`) with unit tests.
+- Area alias table (`q3`, `q.3`, `quận 3`, `quan 3`, `district 3` → `q3`; "thủ đức" → `q2`, `q9`, `thu_duc`; "quận thủ đức" → `thu_duc`, per ADR-0018) with unit tests.
 - Filter UI bound to URL search params; place cards (cuisine, dish, price, area, tags, Maps link). Testing Library tests for the filter form.
 - Default list hides `needs_info` and `failed`.
+- Details and plan-level choices (price as a maximum, tags AND, whole-word text match, Tailwind + shadcn + Hallmark): [phase-1/s4-web-filters.md](phase-1/s4-web-filters.md), [ADR-0021](../adr/0021-web-ui-tailwind-shadcn-tokens.md).
 
 ### S5 — `/add` and ask-back · ~6h
 

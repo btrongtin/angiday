@@ -31,8 +31,12 @@ export async function searchPlaces(
   if (area?.kind === 'districts') query['area.legacyDistrict'] = { $in: area.districts };
   else if (area?.kind === 'text') and.push(wholeWords(area.text));
 
+  // The card shows "Q3" but searchText holds "quan 3", so a district alias typed in the search box also matches by district.
   const text = filters.q === null ? '' : normalizeForSearch(filters.q);
-  if (text !== '') and.push(wholeWords(text));
+  if (text !== '') {
+    const alias = resolveAreaQuery(text);
+    and.push(alias?.kind === 'districts' ? { $or: [wholeWords(text), { 'area.legacyDistrict': { $in: alias.districts } }] } : wholeWords(text));
+  }
   if (and.length > 0) query.$and = and;
 
   const docs = await placesCollection(db)

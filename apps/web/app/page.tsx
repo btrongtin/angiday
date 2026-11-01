@@ -6,15 +6,18 @@ import { PlaceFilterForm } from '@/components/place-filter-form';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { getWebEnv } from '@/lib/env';
+import { dropUnknownTags } from '@/lib/known-tags';
 import { requireSession } from '@/lib/session';
 import { logout } from './login/actions';
 
 export default async function HomePage({ searchParams }: PageProps<'/'>) {
   await requireSession();
   const env = getWebEnv();
-  const filters = parsePlaceFilters(await searchParams);
+  const requested = parsePlaceFilters(await searchParams);
   const db = await getDb(env.MONGODB_URI);
-  const [places, tags] = await Promise.all([searchPlaces(db, env.GROUP_ID, filters), listTags(db, env.GROUP_ID)]);
+  const tags = await listTags(db, env.GROUP_ID);
+  const filters = dropUnknownTags(requested, tags);
+  const places = await searchPlaces(db, env.GROUP_ID, filters);
   const tagNames = new Map(tags.map((tag) => [tag.id, tag.name]));
   const filtered = hasActiveFilters(filters);
 

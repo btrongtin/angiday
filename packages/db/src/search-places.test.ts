@@ -130,6 +130,16 @@ describe('searchPlaces', () => {
     expect(await names(groupA, { q: 'quận 1' })).toEqual(['Lẩu Hàn Q1']);
   });
 
+  it('anchors the phrase at a word start', async () => {
+    expect(await names(groupA, { q: 'un bo' })).toEqual([]);
+  });
+
+  it('resolves a district alias typed in q, as it is on the card', async () => {
+    expect(await names(groupA, { q: 'q3' })).toEqual(['Bún Bò Xuân Hòa', 'Nướng Hàn Q3']);
+    expect(await names(groupA, { q: 'Q.1' })).toEqual(['Lẩu Hàn Q1']);
+    expect(await names(groupA, { q: 'thủ đức' })).toEqual(['Quán Q2', 'Quán Q9', 'Quán Thủ Đức']);
+  });
+
   it('ignores a q that normalizes to nothing', async () => {
     expect(await searchPlaces(db, groupA, filters({ q: '...' }))).toHaveLength(8);
   });

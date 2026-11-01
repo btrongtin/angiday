@@ -68,6 +68,7 @@
   html {
     @apply font-sans;
     overflow-x: clip;
+    color-scheme: light;
     scrollbar-color: var(--color-rule) var(--color-paper);
   }
   body {
@@ -95,6 +96,11 @@
   ::selection {
     background: color-mix(in oklab, var(--color-gold) 40%, transparent);
   }
+}
+
+/* Native controls (select popups, datalist, scrollbars) follow the theme. */
+.dark {
+  color-scheme: dark;
 }
 
 /* The label: a gold hairline inset 6px inside an ink-ruled well on a hard paper shadow (Solstice, Surfaces). */
