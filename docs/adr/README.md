@@ -26,6 +26,7 @@ One file per decision. An accepted ADR's decision is never edited. To change cou
 | [0018](0018-district-polygons-from-geoboundaries.md) | District polygons from geoBoundaries instead of GADM | Accepted |
 | [0019](0019-duplicate-places-by-feature-id-then-name-and-distance.md) | Detect an already-saved place by feature id, then by name and distance | Accepted |
 | [0020](0020-gemini-flash-lite-for-extraction.md) | Gemini Flash Lite as the extraction model | Accepted |
+| [0021](0021-web-ui-tailwind-shadcn-tokens.md) | Web UI with Tailwind v4, shadcn/ui and design tokens | Accepted |
 
 ## Template
 
