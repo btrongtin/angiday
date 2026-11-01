@@ -1,3 +1,7 @@
+/* Hallmark · shape: app screen · genre: editorial · theme: Solstice (dealt 1/3, seed warm-food-notebook-restaurant-5ded·2db69b05·2026-11-01·r0), dual mode: long-light and dusk
+ * nav: top bar, wordmark and two small actions · signature: the place as a label, a gold-ruled well on a hard paper shadow · states: loading, empty, filtered-empty, error, full
+ * axes: light 94 80 / high-contrast serif / warm 24 · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: E, vermilion must stay under 5% of the list screen, so only the primary button, the focus ring and the visited badge carry it */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -23,7 +27,7 @@
   --accent-foreground: var(--color-ink);
   --destructive: var(--color-error);
   --border: var(--color-rule);
-  --input: var(--color-rule);
+  --input: var(--color-ink);
   --ring: var(--color-focus);
   --radius: var(--radius-card);
 }
@@ -32,6 +36,7 @@
 @theme inline {
   --font-heading: var(--font-display);
   --font-sans: var(--font-body);
+  --font-small: var(--font-outlier);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -62,8 +67,47 @@
   }
   html {
     @apply font-sans;
+    overflow-x: clip;
+    scrollbar-color: var(--color-rule) var(--color-paper);
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: clip;
+    font-size: 1rem;
+    line-height: 1.55;
+    caret-color: var(--color-accent);
+  }
+  h1,
+  h2,
+  h3 {
+    font-weight: 400;
+    line-height: 1.05;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    min-width: 0;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a:hover {
+    text-decoration-color: var(--color-accent);
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-gold) 40%, transparent);
+  }
+}
+
+/* The label: a gold hairline inset 6px inside an ink-ruled well on a hard paper shadow (Solstice, Surfaces). */
+@utility label-well {
+  background: var(--color-paper-2);
+  border: var(--rule-bar) solid var(--color-ink);
+  outline: var(--rule-hair) solid var(--color-gold);
+  outline-offset: -7px;
+  box-shadow: var(--shadow-card);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
   }
 }

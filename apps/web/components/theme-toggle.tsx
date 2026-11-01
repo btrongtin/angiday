@@ -15,7 +15,7 @@ export function ThemeToggle() {
   const current = mounted && theme in NEXT_THEME ? (theme as keyof typeof NEXT_THEME) : 'system';
 
   return (
-    <Button type="button" variant="outline" size="sm" aria-label="Đổi giao diện sáng/tối" onClick={() => setTheme(NEXT_THEME[current])}>
+    <Button type="button" variant="outline" size="sm" aria-label={`Giao diện: ${LABELS[current]}. Bấm để đổi`} onClick={() => setTheme(NEXT_THEME[current])}>
       {LABELS[current]}
     </Button>
   );
