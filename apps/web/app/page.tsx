@@ -1,5 +1,5 @@
-import { getDb, listPlaces, listTags } from '@angiday/db';
-import { formatAreaLabel, formatClassificationLine } from '@angiday/shared';
+import { getDb, listTags, searchPlaces } from '@angiday/db';
+import { EMPTY_PLACE_FILTERS, formatAreaLabel, formatClassificationLine } from '@angiday/shared';
 import { getWebEnv } from '@/lib/env';
 import { requireSession } from '@/lib/session';
 import { logout } from './login/actions';
@@ -8,7 +8,7 @@ export default async function HomePage() {
   await requireSession();
   const env = getWebEnv();
   const db = await getDb(env.MONGODB_URI);
-  const [places, tags] = await Promise.all([listPlaces(db, env.GROUP_ID), listTags(db, env.GROUP_ID)]);
+  const [places, tags] = await Promise.all([searchPlaces(db, env.GROUP_ID, EMPTY_PLACE_FILTERS), listTags(db, env.GROUP_ID)]);
   const tagNames = new Map(tags.map((tag) => [tag.id, tag.name]));
 
   return (

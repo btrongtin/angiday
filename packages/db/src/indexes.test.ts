@@ -36,4 +36,13 @@ describe('places indexes', () => {
     expect(index?.key).toEqual({ groupId: 1, mapsFeatureId: 1 });
     expect(index?.unique).toBeUndefined();
   });
+
+  it.each([
+    ['groupId_tagIds', { groupId: 1, tagIds: 1 }],
+    ['groupId_legacyDistrict', { groupId: 1, 'area.legacyDistrict': 1 }],
+  ])('has the search index %s', async (name, key) => {
+    const index = (await placesCollection(db).indexes()).find((i) => i.name === name);
+
+    expect(index?.key).toEqual(key);
+  });
 });

@@ -11,6 +11,8 @@ export async function ensureIndexes(db: Db): Promise<void> {
     { key: { groupId: 1, createdAt: -1 }, name: 'groupId_createdAt' },
     // Not unique: places saved before duplicate detection (ADR-0019) may already share a feature id.
     { key: { groupId: 1, mapsFeatureId: 1 }, name: 'groupId_mapsFeatureId' },
+    { key: { groupId: 1, tagIds: 1 }, name: 'groupId_tagIds' },
+    { key: { groupId: 1, 'area.legacyDistrict': 1 }, name: 'groupId_legacyDistrict' },
     {
       key: { groupId: 1, 'source.telegramUpdateId': 1 },
       name: 'groupId_telegramUpdateId_unique',

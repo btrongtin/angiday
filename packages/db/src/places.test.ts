@@ -1,8 +1,9 @@
-import { EMPTY_AREA, normalizeForSearch, type NewTelegramPlace } from '@angiday/shared';
+import { EMPTY_AREA, EMPTY_PLACE_FILTERS, normalizeForSearch, type NewTelegramPlace } from '@angiday/shared';
 import { type Db, ObjectId } from 'mongodb';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { placesCollection } from './collections';
-import { findDuplicatePlace, findPlaceByTelegramUpdate, listPlaces, upsertPlaceFromTelegram } from './places';
+import { findDuplicatePlace, findPlaceByTelegramUpdate, upsertPlaceFromTelegram } from './places';
+import { searchPlaces } from './search-places';
 import { startMemoryMongo } from './testing/memory-mongo';
 
 let db: Db;
@@ -89,7 +90,7 @@ describe('upsertPlaceFromTelegram', () => {
   });
 });
 
-describe('listPlaces', () => {
+describe('searchPlaces without filters', () => {
   it('returns only the group’s saved places, newest first', async () => {
     const older = await upsertPlaceFromTelegram(db, groupB, newPlace(10));
     const newer = await upsertPlaceFromTelegram(db, groupB, newPlace(11));
@@ -106,7 +107,7 @@ describe('listPlaces', () => {
       updatedAt: new Date(),
     });
 
-    const places = await listPlaces(db, groupB);
+    const places = await searchPlaces(db, groupB, EMPTY_PLACE_FILTERS);
 
     expect(places.map((p) => p.id)).toEqual([newer.id, older.id]);
   });
@@ -127,7 +128,7 @@ describe('listPlaces', () => {
       updatedAt: new Date(),
     });
 
-    const [place] = await listPlaces(db, groupC.toHexString());
+    const [place] = await searchPlaces(db, groupC.toHexString(), EMPTY_PLACE_FILTERS);
 
     expect(place).toMatchObject({
       mapsFeatureId: null,
@@ -157,13 +158,13 @@ describe('listPlaces', () => {
       updatedAt: new Date(),
     });
 
-    const [place] = await listPlaces(db, groupD.toHexString());
+    const [place] = await searchPlaces(db, groupD.toHexString(), EMPTY_PLACE_FILTERS);
 
     expect(place).toMatchObject({ cuisine: [], dishType: [], priceRange: null, highlights: [], tagIds: [] });
   });
 
   it('applies the limit', async () => {
-    expect(await listPlaces(db, groupB, { limit: 1 })).toHaveLength(1);
+    expect(await searchPlaces(db, groupB, EMPTY_PLACE_FILTERS, { limit: 1 })).toHaveLength(1);
   });
 });
 
