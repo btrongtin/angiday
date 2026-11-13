@@ -2,7 +2,7 @@ import { buildPlaceSearchText, EMPTY_AREA, type NewTelegramPlace, normalizeForSe
 import type { Db } from 'mongodb';
 import { type PlaceDoc, placesCollection, toObjectId } from './collections';
 
-function toPlace({ _id, groupId, tagIds, ...rest }: PlaceDoc): Place {
+export function toPlace({ _id, groupId, tagIds, ...rest }: PlaceDoc): Place {
   const mapsFeatureId = rest.mapsFeatureId ?? null;
   const address = rest.address ?? null;
   const area = rest.area ?? EMPTY_AREA;
@@ -56,16 +56,6 @@ export async function upsertPlaceFromTelegram(db: Db, groupId: string, input: Ne
   );
   if (!doc) throw new Error('Place upsert returned no document');
   return toPlace(doc);
-}
-
-/** The group's saved places, newest first. `needs_info` / `failed` stay hidden (architecture.md → F2). */
-export async function listPlaces(db: Db, groupId: string, options: { limit?: number } = {}): Promise<Place[]> {
-  const docs = await placesCollection(db)
-    .find({ groupId: toObjectId(groupId), ingestStatus: 'saved' })
-    .sort({ createdAt: -1, _id: -1 })
-    .limit(options.limit ?? 100)
-    .toArray();
-  return docs.map(toPlace);
 }
 
 /** The place a Telegram update produced, if any (a retried SQS message finds its earlier result here). */

@@ -2,7 +2,7 @@
 
 Restaurant saving & search for a small group (2 people for now). Users share Google Maps links into a Telegram group; a bot extracts structured place data with an LLM and stores it. A web app lets them browse/filter places and ask an AI chatbot.
 
-**Current phase:** Phase 1 — ingest + list (S3 done; next: slice S4). Plan: [docs/plans/phase-1-ingest-and-list.md](docs/plans/phase-1-ingest-and-list.md). See [docs/progress.md](docs/progress.md) → "Now / Next".
+**Current phase:** Phase 1 — ingest + list (S3 done; S4 built, awaiting the owner's demo; next: S5). Plan: [docs/plans/phase-1-ingest-and-list.md](docs/plans/phase-1-ingest-and-list.md). See [docs/progress.md](docs/progress.md) → "Now / Next".
 
 ## Docs map
 
@@ -47,6 +47,7 @@ Version pins: TypeScript `~6.0` (typescript-eslint peer), ESLint 9 (eslint-confi
 - **Multi-tenancy:** every query and every repository function takes `groupId`. No unscoped reads.
 - **Thin handlers:** Route Handlers / Lambda handlers only parse input, call `packages/*`, and format output. Business logic lives in packages (this keeps the future NestJS migration cheap — see ADR-0005).
 - **Schemas:** zod in `packages/shared` is the single source of truth. Docs link to schemas; they never copy field lists.
+- **Web styling:** colours and fonts only via tokens in `apps/web/app/tokens.css`; `apps/web/DESIGN.md` is the locked design system ([ADR-0021](docs/adr/0021-web-ui-tailwind-shadcn-tokens.md)). No literal colour or `font-family` elsewhere.
 - **Secrets:** SSM Parameter Store (AWS) / Vercel env vars. Never commit secrets or `.env` files.
 - **LLM output:** always validate with zod; never trust ids produced by the LLM (see ADR-0006).
 

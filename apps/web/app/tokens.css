@@ -1,0 +1,50 @@
+/* Hallmark · shape: app screen · genre: editorial · theme: Solstice (dealt 1/3, seed warm-food-notebook-restaurant-5ded·2db69b05·2026-11-01·r0), dual mode: long-light and dusk
+ * nav: top bar, wordmark and two small actions · signature: the place as a label, a gold-ruled well on a hard paper shadow · states: loading, empty, filtered-empty, error, full
+ * axes: light 94 80 / high-contrast serif / warm 24 · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V4 · weakest: E, vermilion must stay under 5% of the list screen, so only the primary button, the focus ring and the visited badge carry it */
+
+/*
+ * Design tokens: the only place colours and fonts are declared (ADR-0021). Light in :root, dark in .dark.
+ * Roles and derivation: apps/web/DESIGN.md.
+ */
+:root {
+  --color-paper: oklch(94% 0.03 80);
+  --color-paper-2: oklch(97% 0.02 85);
+  --color-paper-3: oklch(89% 0.05 80);
+  --color-ink: oklch(27% 0.05 50);
+  --color-ink-2: oklch(36% 0.05 50);
+  --color-muted: oklch(46% 0.06 55);
+  --color-rule: oklch(84% 0.06 78);
+  --color-accent: oklch(54% 0.2 24);
+  --color-accent-ink: oklch(97% 0.02 85);
+  --color-focus: oklch(54% 0.2 24);
+  --color-gold: oklch(74% 0.14 75);
+  --color-error: oklch(46% 0.2 27);
+
+  --font-display: var(--font-loaded-display), ui-serif, Georgia, serif;
+  --font-body: var(--font-loaded-body), ui-sans-serif, system-ui, sans-serif;
+  --font-outlier: var(--font-loaded-small), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 0;
+  --radius-pill: 999px;
+  --rule-hair: 1px;
+  --rule-bar: 2px;
+  --shadow-card: 6px 6px 0 var(--color-paper-3);
+}
+
+/* dusk: plum-brown paper, cream ink; the anchor hue (24) does not move */
+.dark {
+  --color-paper: oklch(17% 0.015 45);
+  --color-paper-2: oklch(21% 0.018 45);
+  --color-paper-3: oklch(26% 0.02 45);
+  --color-ink: oklch(94% 0.02 85);
+  --color-ink-2: oklch(85% 0.025 80);
+  --color-muted: oklch(72% 0.03 75);
+  --color-rule: oklch(32% 0.03 55);
+  --color-accent: oklch(64% 0.17 26);
+  --color-accent-ink: oklch(16% 0.015 45);
+  --color-focus: oklch(72% 0.16 26);
+  --color-gold: oklch(78% 0.13 80);
+  --color-error: oklch(72% 0.17 25);
+  --shadow-card: 6px 6px 0 var(--color-paper-3);
+}

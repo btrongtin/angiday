@@ -48,7 +48,7 @@ flowchart LR
 | `packages/db` | Mongo client (reused across invocations), repositories for groups/places/tags, `searchPlaces(groupId, filters)` | shared | web, worker |
 | `services/ingest` — webhook | Verify Telegram secret, drop unknown chats, enqueue, ack 200 fast | SQS | Telegram |
 | `services/ingest` — worker | Resolve Maps link, reverse geocode, LLM extraction, tag mapping, persist, reply in Telegram; Telegram chat adapter (F7) | db, shared, ai, Nominatim, Telegram API | SQS |
-| `apps/web` | UI (list, filters, tags, chat) + thin Route Handlers | db, shared, ai | browser |
+| `apps/web` | UI (list, filters, tags, chat) + thin Route Handlers; Tailwind v4 + shadcn/ui, colours and fonts only via `app/tokens.css`, locked system in `apps/web/DESIGN.md` ([ADR-0021](adr/0021-web-ui-tailwind-shadcn-tokens.md)) | db, shared, ai | browser |
 | `infra` | CDK: Lambdas, SQS, DLQ, alarms, SSM params | — | — |
 
 Rule: handlers stay thin, logic lives in `packages/*` ([ADR-0005](adr/0005-api-in-nextjs-nestjs-later.md)).
@@ -63,7 +63,7 @@ The field-level source of truth is the zod schemas in `packages/shared`. This se
 |---|---|---|
 | `groups` | Tenant; links a Telegram chat to a group; stores registered topic ids (`saveThreadId`, `askThreadId`) | unique `telegramChatId` |
 | `members` | People in a group (Telegram user, display name); used for "added by" and per-person ratings | `{ groupId, telegramUserId }` unique |
-| `places` | One saved restaurant | `{ groupId, createdAt }`, `{ groupId, mapsFeatureId }` (already-saved check), `{ groupId, "source.telegramUpdateId" }` unique (idempotent save), `{ groupId, tagIds }` (multikey, later), `{ groupId, "area.legacyDistrict" }` (later), `location` 2dsphere (later) |
+| `places` | One saved restaurant | `{ groupId, createdAt }`, `{ groupId, mapsFeatureId }` (already-saved check), `{ groupId, "source.telegramUpdateId" }` unique (idempotent save), `{ groupId, tagIds }` (multikey, tag filter), `{ groupId, "area.legacyDistrict" }` (area filter), `location` 2dsphere (later) |
 | `tags` | Per-group tag registry `{ name, normalized }` | `{ groupId, normalized }` unique |
 | `telegram_updates` | Processed update ids for idempotency, scoped per group | `{ groupId, updateId }` unique, TTL 7 days on `createdAt` |
 | `chat_turns` | Recent Telegram chat turns per topic, for multi-turn context (Phase 2) | `{ groupId, threadId, createdAt }`, TTL |
@@ -145,7 +145,7 @@ The ingest Lambda decides cheaply what enters the queue; everything else is drop
 
 1. Admin logs in (hardcoded credentials → session cookie).
 2. Server Component calls `searchPlaces(groupId, filters)`.
-3. Filters: cuisine, dish type, area (old district or new ward, via alias table — [ADR-0013](adr/0013-area-legacy-district-from-polygons.md)), price, tags, visit status, free text.
+3. Filters (one `searchPlaces` query, always scoped by `groupId`, `ingestStatus: saved` only): values within a field are alternatives (OR), fields are ANDed, a place needs every selected tag (by tag id, ADR-0006), price is a maximum bucket (places without a price drop out while it is set), free text and non-alias area match `searchText` as a whole-word, accent-insensitive phrase. Fields: cuisine, dish type, area (old district or new ward, via alias table — [ADR-0013](adr/0013-area-legacy-district-from-polygons.md)), price, tags, visit status, free text.
 4. Cards link to Google Maps.
 
 ### F5. AI chat (web) — Phase 2
