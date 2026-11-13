@@ -1,3 +1,4 @@
+import Form from 'next/form';
 import Link from 'next/link';
 import {
   CUISINE_KEYS,
@@ -9,12 +10,14 @@ import {
   LEGACY_DISTRICTS,
   PRICE_RANGE_KEYS,
   PRICE_RANGE_LABELS,
+  placeFiltersToSearchParams,
   type PlaceFilters,
   type Tag,
 } from '@angiday/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SyncForm } from '@/components/sync-form';
 
 const AREA_LIST_ID = 'area-suggestions';
 const control =
@@ -49,13 +52,14 @@ function CheckboxGroup({
   );
 }
 
-/** A plain GET form: the filters live in the URL, so it works without JavaScript (S4 plan → Deviations). */
+/** A GET form (next/form): the filters live in the URL, it navigates client-side without a page reload, and still works without JavaScript. */
 export function PlaceFilterForm({ filters, tags }: { filters: PlaceFilters; tags: readonly Tag[] }) {
   const active = hasActiveFilters(filters);
   const advanced = hasActiveFilters({ ...filters, q: null });
 
   return (
-    <form method="get" action="/" className="flex flex-col gap-4">
+    <Form action="/" className="flex flex-col gap-4">
+      <SyncForm syncKey={placeFiltersToSearchParams(filters).toString()} />
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="q">Tìm quán, món, địa chỉ</Label>
         <Input id="q" name="q" type="search" defaultValue={filters.q ?? ''} className="h-11 bg-card" placeholder="bún bò, Xuân Hòa…" />
@@ -85,7 +89,7 @@ export function PlaceFilterForm({ filters, tags }: { filters: PlaceFilters; tags
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="price">Giá</Label>
-              <select id="price" name="price" defaultValue={filters.maxPrice ?? ''} className={control}>
+              <select key={filters.maxPrice ?? ''} id="price" name="price" defaultValue={filters.maxPrice ?? ''} className={control}>
                 <option value="">Mọi mức giá</option>
                 {PRICE_RANGE_KEYS.map((key) => (
                   <option key={key} value={key}>
@@ -96,7 +100,7 @@ export function PlaceFilterForm({ filters, tags }: { filters: PlaceFilters; tags
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="visit">Đã ăn chưa</Label>
-              <select id="visit" name="visit" defaultValue={filters.visitStatus ?? ''} className={control}>
+              <select key={filters.visitStatus ?? ''} id="visit" name="visit" defaultValue={filters.visitStatus ?? ''} className={control}>
                 <option value="">Tất cả</option>
                 <option value="want_to_try">Muốn thử</option>
                 <option value="visited">Đã ăn</option>
@@ -116,6 +120,6 @@ export function PlaceFilterForm({ filters, tags }: { filters: PlaceFilters; tags
           </Link>
         )}
       </div>
-    </form>
+    </Form>
   );
 }

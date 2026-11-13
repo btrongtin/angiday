@@ -38,7 +38,7 @@ Everything in S1–S3's Global Constraints still applies (catalog versions, JIT 
 | UI unstyled (S1–S3) | Tailwind v4 + shadcn/ui + Hallmark, light/dark, tokens — **new ADR-0021** | Owner's choice; a UI stack is an architectural decision |
 | Vercel deploy (S1 Task 12) | Still deferred | Owner's decision for this slice |
 | (not specified) | Up to 100 results, newest first, no pagination; "Hiển thị 100 quán mới nhất" note when the limit is hit | Two users, a few hundred places at most |
-| (not specified) | Plain `<form method="get" action="/">`, not `next/form` | Works without JavaScript, renders in Testing Library without a router; a full reload is fine at this scale |
+| (not specified) | `next/form` (`<Form action="/">`, a GET form): client-side navigation, still works without JavaScript. The results sit in their own `Suspense` boundary and there is no `app/loading.tsx` | First version used a plain `<form>` plus a page-level `loading.tsx`: Enter reloaded the whole page, then the skeleton replaced the header and the form too (owner feedback after the S4 demo) |
 
 ## Review Focus
 
