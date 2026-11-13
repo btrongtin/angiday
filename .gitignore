@@ -33,3 +33,7 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+.hallmark/
+
+# Playwright MCP output (snapshots, console logs, screenshots)
+.playwright-mcp/
